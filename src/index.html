@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>2D Web Based CAD</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="row">
+            <div class="col-8 border border-primary-subtle">
+                <canvas id="c" class="border border-dark align-middle"></canvas>
+            </div>
+            <div class="col-4 border border-primary-subtle bg-dark text-light">
+                <div class="row ms-3">
+                    <label><strong>Click Mode</strong></label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="createShapeRadio" checked>
+                        <label class="form-check-label" for="flexRadioDefault1">
+                            Create Shape
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="selectShapeRadio">
+                        <label class="form-check-label" for="flexRadioDefault2">
+                            Select Shape
+                        </label>
+                    </div>
+                    <label for="dilation-slider" class="form-label"><strong>Shape Dilation</strong></label>
+                    <input type="range" class="form-range" id="dilation-slider" min="0.25" max="3" value="1" step="0.25" disabled>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+        <script  id="vertex-shader-2d" type="notjs">
+        
+            // an attribute will receive data from a buffer
+            attribute vec4 a_position;
+
+            attribute vec4 a_color;
+
+            varying vec4 f_color;
+
+            // all shaders have a main function
+            void main() {
+        
+                // gl_Position is a special variable a vertex shader
+                // is responsible for setting
+                gl_Position = a_position;
+                
+                f_color = a_color;
+            }
+        </script>
+        
+        <script  id="fragment-shader-2d" type="notjs">
+        
+            // fragment shaders don't have a default precision so we need
+            // to pick one. mediump is a good default
+            precision mediump float;
+
+            varying vec4 f_color;
+        
+            void main() {
+                // gl_FragColor is a special variable a fragment shader
+                // is responsible for setting
+                gl_FragColor = f_color;
+            }
+        
+        </script>
+
+        <script src="./webgl-utils.js"></script>
+        <script src="./utils.js"></script>
+        <script src="./square.js"></script>
+    </body>
+</html>
