@@ -1,6 +1,7 @@
 /* eslint no-console:0 consistent-return:0 */
 "use strict";
 
+canvas;
 var canvas, gl, index = 0;
 
 function main() {
@@ -17,6 +18,9 @@ function main() {
   let createShapeRadio = document.getElementById("createShapeRadio");
   let selectShapeRadio = document.getElementById("selectShapeRadio");
   let dilationSlider = document.getElementById("dilation-slider");
+  let dilationSliderLabel = document.querySelector("label[for='dilation-slider']");
+  let colorPicker = document.getElementById("colorPicker");
+  let colorPickerLabel = document.querySelector("label[for='colorPicker']");
 
   var arrayOfShapes = [];
   var shape_index = 0;
@@ -28,6 +32,8 @@ function main() {
   var selected_shape_center = null;
 
   var is_moving_shape = false;
+  var vertex_clicked = false;
+  var clicked_vertex = null;
 
   var v1, v2, v3, v4;
   var default_color = [1, 1, 0, 1]; // yellow
@@ -112,7 +118,6 @@ function main() {
 
   var oldDilationSliderValue = 1;
   dilationSlider.addEventListener("change", (e) => {
-    // console.log(dilationSlider.value);
     if (selected_shape != null) {
       let dilateValue = (dilationSlider.value / oldDilationSliderValue);
       gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array([selected_shape.vertices.v1[0] * dilateValue, selected_shape.vertices.v1[1] * dilateValue]));
@@ -133,12 +138,34 @@ function main() {
     selected_shape = null;
     selected_shape_center = null;
     dilationSlider.disabled = true;
+    dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
     dilationSlider.value = 1;
     oldDilationSliderValue = 1;
   });
 
   selectShapeRadio.addEventListener("click", (e) => {
     clickMode = 1;
+  });
+
+  colorPicker.addEventListener("input", (e) => {
+    if (clicked_vertex != null && clickMode == 1) {
+      gl.bindBuffer( gl.ARRAY_BUFFER, colorBuffer);
+      let rgb255 = colorPicker.value.convertToRGB();
+      let rgb = rgb255.map((element) => element / 255).concat([1]);
+
+      if (clicked_vertex == "v1") {
+        gl.bufferSubData(gl.ARRAY_BUFFER, 16*selected_shape.index, new Float32Array(rgb));
+      } else if (clicked_vertex == "v2") {
+        gl.bufferSubData(gl.ARRAY_BUFFER, 16*(selected_shape.index + 2), new Float32Array(rgb));
+      } else if (clicked_vertex == "v3") {
+        gl.bufferSubData(gl.ARRAY_BUFFER, 16*(selected_shape.index + 1), new Float32Array(rgb));
+      } else if (clicked_vertex == "v4") {
+        gl.bufferSubData(gl.ARRAY_BUFFER, 16*(selected_shape.index + 3), new Float32Array(rgb));
+      }
+      selected_shape.colors[clicked_vertex] = rgb;
+      
+      arrayOfShapes[selected_shape.shape_index].colors[clicked_vertex] = rgb;
+    }
   });
 
   canvas.addEventListener("mousedown", function(event) {
@@ -151,17 +178,7 @@ function main() {
     mouseDown = false;
     // console.log("mouseup");
     if (is_moving_shape) {
-      // let position = getPositionInCanvas(event);
       is_moving_shape = false;
-      // var old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
-      // var new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
-      // var correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
-
-      // arrayOfShapes[selected_shape.shape_index].v1 = [selected_shape.vertices.v1[0] + correction.x, selected_shape.vertices.v1[1] + correction.y];
-      // arrayOfShapes[selected_shape.shape_index].v3 = [selected_shape.vertices.v3[0] + correction.x, selected_shape.vertices.v3[1] + correction.y];
-      // arrayOfShapes[selected_shape.shape_index].v2 = [selected_shape.vertices.v2[0] + correction.x, selected_shape.vertices.v2[1] + correction.y];
-      // arrayOfShapes[selected_shape.shape_index].v4 = [selected_shape.vertices.v4[0] + correction.x, selected_shape.vertices.v4[1] + correction.y];
-
       arrayOfShapes[selected_shape.shape_index].vertices.v1 = v1;
       arrayOfShapes[selected_shape.shape_index].vertices.v3 = v3;
       arrayOfShapes[selected_shape.shape_index].vertices.v2 = v2;
@@ -174,7 +191,6 @@ function main() {
   });
 
   canvas.addEventListener("click", function(event) {
-    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
     let position = getPositionInCanvas(event);
 
     if (clickMode == 0) {
@@ -234,24 +250,43 @@ function main() {
         selected_shape = shape;
         selected_shape_center = getCenterOfShape(selected_shape);
         dilationSlider.disabled = false;
+        dilationSliderLabel.innerText = "Shape Dilation";
+
+        let corner_position = positionInCornerShape(position, selected_shape);
+        if (corner_position != null) {
+          clicked_vertex = corner_position;
+          colorPickerLabel.innerText = "Select Vertex Color";
+          colorPicker.disabled = false;
+          let color = arrayOfShapes[selected_shape.shape_index].colors[corner_position];
+          let rgb = color.map((element) => Math.round(element * 255));
+          colorPicker.value = rgbToHex(rgb);
+        } else {
+          clicked_vertex = null;
+          colorPickerLabel.innerText = "Select Vertex Color (disabled, click a vertex to use)";
+          colorPicker.disabled = true;
+        }
+
       } else {
         selected_shape = null;
         selected_shape_center = null;
         dilationSlider.disabled = true;
+        dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
         dilationSlider.value = 1;
         oldDilationSliderValue = 1;
+        clicked_vertex = null;
+        colorPickerLabel.innerText = "Select Vertex Color (disabled, click a vertex to use)";
+        colorPicker.disabled = true;
       }
     }
   });
 
   canvas.addEventListener("mousemove", function(event) {
+    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
     let position = getPositionInCanvas(event);
     if (clickMode == 0) {
       canvas.style.cursor = "pointer";
   
-      if(!first) {
-        gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
-  
+      if(!first) {  
         let abs_x = Math.abs(v1[0] - position.x);
         let abs_y = Math.abs(v1[1] - position.y);
         
@@ -272,6 +307,7 @@ function main() {
       }
     } else if (clickMode == 1) {
       if (selected_shape != null && mouseDown && positionInShape(mouseDownPosition, selected_shape)) {
+        
         let corner_position = positionInCornerShape(mouseDownPosition, selected_shape);
         is_moving_shape = true;
         let old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
@@ -282,8 +318,6 @@ function main() {
           if (corner_position == "v1") {
             v1 = [selected_shape.vertices.v1[0] + correction.x, selected_shape.vertices.v1[1] + correction.y];
             v2 = selected_shape.vertices.v2;
-            // v3 = [selected_shape.vertices.v3[0] + correction.x, selected_shape.vertices.v3[1]];
-            // v4 = [selected_shape.vertices.v4[0], selected_shape.vertices.v4[1] + correction.y];
 
             let abs_x = Math.abs(v2[0] - position.x);
             let abs_y = Math.abs(v2[1] - position.y);
@@ -304,8 +338,6 @@ function main() {
           } else if (corner_position == "v2") {
             v1 = selected_shape.vertices.v1;
             v2 = [selected_shape.vertices.v2[0] + correction.x, selected_shape.vertices.v2[1] + correction.y];
-            // v3 = [selected_shape.vertices.v3[0], selected_shape.vertices.v3[1] + correction.y];
-            // v4 = [selected_shape.vertices.v4[0] + correction.x, selected_shape.vertices.v4[1]];
 
             let abs_x = Math.abs(v1[0] - position.x);
             let abs_y = Math.abs(v1[1] - position.y);
@@ -324,8 +356,6 @@ function main() {
             gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array(v4));
 
           } else if (corner_position == "v3") {
-            // v1 = [selected_shape.vertices.v1[0] + correction.x, selected_shape.vertices.v1[1]];
-            // v2 = [selected_shape.vertices.v2[0], selected_shape.vertices.v2[1] + correction.y];
             v3 = [selected_shape.vertices.v3[0] + correction.x, selected_shape.vertices.v3[1] + correction.y];
             v4 = selected_shape.vertices.v4;
 
@@ -346,8 +376,6 @@ function main() {
             gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array(v2));
 
           } else if (corner_position == "v4") {
-            // v1 = [selected_shape.vertices.v1[0], selected_shape.vertices.v1[1] + correction.y];
-            // v2 = [selected_shape.vertices.v2[0] + correction.x, selected_shape.vertices.v2[1]];
             v3 = selected_shape.vertices.v3;
             v4 = [selected_shape.vertices.v4[0] + correction.x, selected_shape.vertices.v4[1] + correction.y];
 
@@ -374,7 +402,7 @@ function main() {
           v2 = [selected_shape.vertices.v2[0] + correction.x, selected_shape.vertices.v2[1] + correction.y];
           v3 = [selected_shape.vertices.v3[0] + correction.x, selected_shape.vertices.v3[1] + correction.y];
           v4 = [selected_shape.vertices.v4[0] + correction.x, selected_shape.vertices.v4[1] + correction.y];
-
+          
           gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array(v1));
           gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array(v3));
           gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array(v2));

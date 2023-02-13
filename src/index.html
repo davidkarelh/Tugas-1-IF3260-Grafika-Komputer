@@ -28,8 +28,11 @@
                             Select Shape
                         </label>
                     </div>
-                    <label for="dilation-slider" class="form-label"><strong>Shape Dilation</strong></label>
-                    <input type="range" class="form-range" id="dilation-slider" min="0.25" max="3" value="1" step="0.25" disabled>
+                    
+                    <strong><label for="dilation-slider" class="form-label">Shape Dilation (disabled, click a shape to use)</label></strong>
+                    <input type="range" class="form-range" name="dilation-slider" id="dilation-slider" min="0.25" max="3" value="1" step="0.25" disabled>
+                    <strong><label class="form-label" for="colorPicker">Select Vertex Color (disabled, click a vertex to use)</label></strong>
+                    <input class="form-range" type="color" name="colorPicker" id="colorPicker" value="#FFFF00" disabled>
                 </div>
             </div>
         </div>
@@ -67,7 +70,7 @@
             void main() {
                 // gl_FragColor is a special variable a fragment shader
                 // is responsible for setting
-                gl_FragColor = f_color, 1;
+                gl_FragColor = f_color;
                 // gl_FragColor = vec4(1, 0, 0.5, 1);
             }
         

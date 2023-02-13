@@ -36,7 +36,6 @@ function isInAShape(event, arrayOfShapes) {
     var position = getPositionInCanvas(event);
     
     for (shape of arrayOfShapes) {
-        // if (position.x <= shape.bottom_right_corner[0] && position.x >= shape.upper_left_corner[0] && position.y >= shape.bottom_right_corner[1] && position.y <= shape.upper_left_corner[1]) {
         if (positionInShape(position, shape)) {
             return shape;
         }
@@ -45,7 +44,6 @@ function isInAShape(event, arrayOfShapes) {
 }
 
 function positionInShape(position, shape) {
-    // return (position.x <= shape.bottom_right_corner[0] && position.x >= shape.upper_left_corner[0] && position.y >= shape.bottom_right_corner[1] && position.y <= shape.upper_left_corner[1]);
     var left, right, top, bottom;
 
     if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
@@ -101,4 +99,27 @@ function getCenterOfShape(shape) {
 
     var ret = [(right + left) / 2, (top + bottom) / 2];
     return ret;
+}
+
+String.prototype.convertToRGB = function(){
+    if(this.length != 7){
+        throw "Only seven-digit hex colors are allowed.";
+    }
+
+    var aRgbHex = this.slice(1).match(/.{1,2}/g);
+    var aRgb = [
+        parseInt(aRgbHex[0], 16),
+        parseInt(aRgbHex[1], 16),
+        parseInt(aRgbHex[2], 16)
+    ];
+    return aRgb;
+}
+
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(rgb) {
+    return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
 }
