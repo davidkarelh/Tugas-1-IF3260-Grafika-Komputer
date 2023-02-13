@@ -48,33 +48,33 @@ function positionInShape(position, shape) {
     // return (position.x <= shape.bottom_right_corner[0] && position.x >= shape.upper_left_corner[0] && position.y >= shape.bottom_right_corner[1] && position.y <= shape.upper_left_corner[1]);
     var left, right, top, bottom;
 
-    if (shape.t1[0] < shape.t2[0]) {
-        left = shape.t1[0];
-        right = shape.t2[0];
+    if (shape.vertices.t1[0] < shape.vertices.t2[0]) {
+        left = shape.vertices.t1[0];
+        right = shape.vertices.t2[0];
     } else {
-        right = shape.t1[0];
-        left = shape.t2[0];
+        right = shape.vertices.t1[0];
+        left = shape.vertices.t2[0];
     }
 
-    if (shape.t1[1] < shape.t2[1]) {
-        bottom = shape.t1[1];
-        top = shape.t2[1];
+    if (shape.vertices.t1[1] < shape.vertices.t2[1]) {
+        bottom = shape.vertices.t1[1];
+        top = shape.vertices.t2[1];
     } else {
-        top = shape.t1[1];
-        bottom = shape.t2[1];
+        top = shape.vertices.t1[1];
+        bottom = shape.vertices.t2[1];
     }
 
     return (position.x <= right && position.x >= left && position.y >= bottom && position.y <= top);
 }
 
 function positionInCornerShape(position, shape) {
-    if (Math.abs(position.x - shape.t1[0]) + Math.abs(position.y - shape.t1[1]) < 0.05) {
+    if (Math.abs(position.x - shape.vertices.t1[0]) + Math.abs(position.y - shape.vertices.t1[1]) < 0.05) {
         return "t1";
-    } else if (Math.abs(position.x - shape.t2[0]) + Math.abs(position.y - shape.t2[1]) < 0.05) {
+    } else if (Math.abs(position.x - shape.vertices.t2[0]) + Math.abs(position.y - shape.vertices.t2[1]) < 0.05) {
         return "t2";
-    } else if (Math.abs(position.x - shape.t3[0]) + Math.abs(position.y - shape.t3[1]) < 0.05) {
+    } else if (Math.abs(position.x - shape.vertices.t3[0]) + Math.abs(position.y - shape.vertices.t3[1]) < 0.05) {
         return "t3";
-    } else if (Math.abs(position.x - shape.t4[0]) + Math.abs(position.y - shape.t4[1]) < 0.05) {
+    } else if (Math.abs(position.x - shape.vertices.t4[0]) + Math.abs(position.y - shape.vertices.t4[1]) < 0.05) {
         return "t4";
     }
     return null;
@@ -83,20 +83,20 @@ function positionInCornerShape(position, shape) {
 function getCenterOfShape(shape) {
     var left, right, top, bottom;
 
-    if (shape.t1[0] < shape.t2[0]) {
-        left = shape.t1[0];
-        right = shape.t2[0];
+    if (shape.vertices.t1[0] < shape.vertices.t2[0]) {
+        left = shape.vertices.t1[0];
+        right = shape.vertices.t2[0];
     } else {
-        right = shape.t1[0];
-        left = shape.t2[0];
+        right = shape.vertices.t1[0];
+        left = shape.vertices.t2[0];
     }
 
-    if (shape.t1[1] < shape.t2[1]) {
-        bottom = shape.t1[1];
-        top = shape.t2[1];
+    if (shape.vertices.t1[1] < shape.vertices.t2[1]) {
+        bottom = shape.vertices.t1[1];
+        top = shape.vertices.t2[1];
     } else {
-        top = shape.t1[1];
-        bottom = shape.t2[1];
+        top = shape.vertices.t1[1];
+        bottom = shape.vertices.t2[1];
     }
 
     var ret = [(right + left) / 2, (top + bottom) / 2];
