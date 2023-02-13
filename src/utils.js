@@ -67,6 +67,19 @@ function positionInShape(position, shape) {
     return (position.x <= right && position.x >= left && position.y >= bottom && position.y <= top);
 }
 
+function positionInCornerShape(position, shape) {
+    if (Math.abs(position.x - shape.t1[0]) + Math.abs(position.y - shape.t1[1]) < 0.05) {
+        return "t1";
+    } else if (Math.abs(position.x - shape.t2[0]) + Math.abs(position.y - shape.t2[1]) < 0.05) {
+        return "t2";
+    } else if (Math.abs(position.x - shape.t3[0]) + Math.abs(position.y - shape.t3[1]) < 0.05) {
+        return "t3";
+    } else if (Math.abs(position.x - shape.t4[0]) + Math.abs(position.y - shape.t4[1]) < 0.05) {
+        return "t4";
+    }
+    return null;
+}
+
 function getCenterOfShape(shape) {
     var left, right, top, bottom;
 

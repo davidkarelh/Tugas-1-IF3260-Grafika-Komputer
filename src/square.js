@@ -57,8 +57,8 @@ function main() {
   // code above this line is initialization code.
   // code below this line is rendering code.
 
-  gl.canvas.width = (5 / 12) * window.innerWidth;
-  gl.canvas.height = (5 / 12) * window.innerWidth;
+  gl.canvas.width = (7 / 12) * window.innerWidth;
+  gl.canvas.height = (7 / 12) * window.innerWidth;
 
   // Tell WebGL how to convert from clip space to pixels
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -127,14 +127,19 @@ function main() {
     if (is_moving_shape) {
       var position = getPositionInCanvas(event);
       is_moving_shape = false;
-      var old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
-      var new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
-      var correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
+      // var old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
+      // var new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
+      // var correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
 
-      arrayOfShapes[selected_shape.shape_index].t1 = [selected_shape.t1[0] + correction.x, selected_shape.t1[1] + correction.y];
-      arrayOfShapes[selected_shape.shape_index].t3 = [selected_shape.t3[0] + correction.x, selected_shape.t3[1] + correction.y];
-      arrayOfShapes[selected_shape.shape_index].t2 = [selected_shape.t2[0] + correction.x, selected_shape.t2[1] + correction.y];
-      arrayOfShapes[selected_shape.shape_index].t4 = [selected_shape.t4[0] + correction.x, selected_shape.t4[1] + correction.y];
+      // arrayOfShapes[selected_shape.shape_index].t1 = [selected_shape.t1[0] + correction.x, selected_shape.t1[1] + correction.y];
+      // arrayOfShapes[selected_shape.shape_index].t3 = [selected_shape.t3[0] + correction.x, selected_shape.t3[1] + correction.y];
+      // arrayOfShapes[selected_shape.shape_index].t2 = [selected_shape.t2[0] + correction.x, selected_shape.t2[1] + correction.y];
+      // arrayOfShapes[selected_shape.shape_index].t4 = [selected_shape.t4[0] + correction.x, selected_shape.t4[1] + correction.y];
+
+      arrayOfShapes[selected_shape.shape_index].t1 = t1;
+      arrayOfShapes[selected_shape.shape_index].t3 = t3;
+      arrayOfShapes[selected_shape.shape_index].t2 = t2;
+      arrayOfShapes[selected_shape.shape_index].t4 = t4;
     }
   });
 
@@ -211,15 +216,15 @@ function main() {
   });
 
   canvas.addEventListener("mousemove", function(event) {
-    var position = getPositionInCanvas(event);
+    let position = getPositionInCanvas(event);
     if (clickMode == 0) {
       canvas.style.cursor = "pointer";
   
       if(!first) {
         gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
   
-        var abs_x = Math.abs(t1[0] - position.x);
-        var abs_y = Math.abs(t1[1] - position.y);
+        let abs_x = Math.abs(t1[0] - position.x);
+        let abs_y = Math.abs(t1[1] - position.y);
         
         if (abs_x < abs_y) {
           t2 = [position.x, (position.y < t1[1]) ?  (t1[1] - abs_x): (t1[1] + abs_x)];
@@ -236,18 +241,127 @@ function main() {
         gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+3), new Float32Array(t4));
       }
     } else if (clickMode == 1) {
-      if (selected_shape != null && mouseDown) {
-        if (positionInShape(mouseDownPosition, selected_shape)) {
-          is_moving_shape = true;
-          var old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
-          var new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
-          var correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
+      if (selected_shape != null && mouseDown && positionInShape(mouseDownPosition, selected_shape)) {
+        let corner_position = positionInCornerShape(mouseDownPosition, selected_shape);
+        is_moving_shape = true;
+        let old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
+        let new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
+        let correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
 
-          gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array([selected_shape.t1[0] + correction.x, selected_shape.t1[1] + correction.y]));
-          gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array([selected_shape.t3[0] + correction.x, selected_shape.t3[1] + correction.y]));
-          gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array([selected_shape.t2[0] + correction.x, selected_shape.t2[1] + correction.y]));
-          gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array([selected_shape.t4[0] + correction.x, selected_shape.t4[1] + correction.y]));
+        if (corner_position != null) {
+          // let abs_x = Math.abs(t1[0] - position.x);
+          // let abs_y = Math.abs(t1[1] - position.y);
+          
+          // if (abs_x < abs_y) {
+          //   t2 = [position.x, (position.y < t1[1]) ?  (t1[1] - abs_x): (t1[1] + abs_x)];
+          // } else {
+          //   t2 = [(position.x < t1[0]) ?  (t1[0] - abs_y): (t1[0] + abs_y), position.y];
+          // }
+    
+          // t3 = [t1[0], t2[1]];
+          // t4 = [t2[0], t1[1]];
 
+          console.log("corner");
+          if (corner_position == "t1") {
+            t1 = [selected_shape.t1[0] + correction.x, selected_shape.t1[1] + correction.y];
+            t2 = selected_shape.t2;
+            // t3 = [selected_shape.t3[0] + correction.x, selected_shape.t3[1]];
+            // t4 = [selected_shape.t4[0], selected_shape.t4[1] + correction.y];
+
+            let abs_x = Math.abs(t2[0] - position.x);
+            let abs_y = Math.abs(t2[1] - position.y);
+            
+            if (abs_x < abs_y) {
+              t1 = [position.x, (position.y < t2[1]) ?  (t2[1] - abs_x): (t2[1] + abs_x)];
+            } else {
+              t1 = [(position.x < t2[0]) ?  (t2[0] - abs_y): (t2[0] + abs_y), position.y];
+            }
+      
+            t3 = [t1[0], t2[1]];
+            t4 = [t2[0], t1[1]];
+
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array(t1));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array(t3));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array(t4));
+            
+          } else if (corner_position == "t2") {
+            t1 = selected_shape.t1;
+            t2 = [selected_shape.t2[0] + correction.x, selected_shape.t2[1] + correction.y];
+            // t3 = [selected_shape.t3[0], selected_shape.t3[1] + correction.y];
+            // t4 = [selected_shape.t4[0] + correction.x, selected_shape.t4[1]];
+
+            let abs_x = Math.abs(t1[0] - position.x);
+            let abs_y = Math.abs(t1[1] - position.y);
+            
+            if (abs_x < abs_y) {
+              t2 = [position.x, (position.y < t1[1]) ?  (t1[1] - abs_x): (t1[1] + abs_x)];
+            } else {
+              t2 = [(position.x < t1[0]) ?  (t1[0] - abs_y): (t1[0] + abs_y), position.y];
+            }
+      
+            t3 = [t1[0], t2[1]];
+            t4 = [t2[0], t1[1]];
+
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array(t3));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array(t2));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array(t4));
+
+          } else if (corner_position == "t3") {
+            // t1 = [selected_shape.t1[0] + correction.x, selected_shape.t1[1]];
+            // t2 = [selected_shape.t2[0], selected_shape.t2[1] + correction.y];
+            t3 = [selected_shape.t3[0] + correction.x, selected_shape.t3[1] + correction.y];
+            t4 = selected_shape.t4;
+
+            let abs_x = Math.abs(t4[0] - position.x);
+            let abs_y = Math.abs(t4[1] - position.y);
+            
+            if (abs_x < abs_y) {
+              t3 = [position.x, (position.y < t4[1]) ?  (t4[1] - abs_x): (t4[1] + abs_x)];
+            } else {
+              t3 = [(position.x < t4[0]) ?  (t4[0] - abs_y): (t4[0] + abs_y), position.y];
+            }
+      
+            t1 = [t3[0], t4[1]];
+            t2 = [t4[0], t3[1]];
+
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array(t1));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array(t3));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array(t2));
+
+          } else if (corner_position == "t4") {
+            // t1 = [selected_shape.t1[0], selected_shape.t1[1] + correction.y];
+            // t2 = [selected_shape.t2[0] + correction.x, selected_shape.t2[1]];
+            t3 = selected_shape.t3;
+            t4 = [selected_shape.t4[0] + correction.x, selected_shape.t4[1] + correction.y];
+
+            let abs_x = Math.abs(t3[0] - position.x);
+            let abs_y = Math.abs(t3[1] - position.y);
+            
+            if (abs_x < abs_y) {
+              t4 = [position.x, (position.y < t3[1]) ?  (t3[1] - abs_x): (t3[1] + abs_x)];
+            } else {
+              t4 = [(position.x < t3[0]) ?  (t3[0] - abs_y): (t3[0] + abs_y), position.y];
+            }
+      
+            t1 = [t3[0], t4[1]];
+            t2 = [t4[0], t3[1]];
+
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array(t1));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array(t2));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array(t4));
+
+          }
+
+        } else {
+          t1 = [selected_shape.t1[0] + correction.x, selected_shape.t1[1] + correction.y];
+          t2 = [selected_shape.t2[0] + correction.x, selected_shape.t2[1] + correction.y];
+          t3 = [selected_shape.t3[0] + correction.x, selected_shape.t3[1] + correction.y];
+          t4 = [selected_shape.t4[0] + correction.x, selected_shape.t4[1] + correction.y];
+
+          gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array(t1));
+          gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array(t3));
+          gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+2), new Float32Array(t2));
+          gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array(t4));
         }
       }
     }
@@ -263,7 +377,7 @@ function main() {
       gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
     }
 
-    window.requestAnimationFrame(render);
+    window.requestAnimFrame(render);
   }
 }
 
