@@ -168,10 +168,7 @@ function main() {
     // console.log("mouseup");
     if (is_moving_shape) {
       is_moving_shape = false;
-      arrayOfShapes[selected_shape.shape_index].vertices.v1 = v1;
-      arrayOfShapes[selected_shape.shape_index].vertices.v3 = v3;
-      arrayOfShapes[selected_shape.shape_index].vertices.v2 = v2;
-      arrayOfShapes[selected_shape.shape_index].vertices.v4 = v4;
+      stopMovingSquare(arrayOfShapes, v1, v2, v3, v4);
     }
   });
 

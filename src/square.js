@@ -187,3 +187,10 @@ var moveSquare = (gl, selected_shape, correction, v1, v2, v3, v4) => {
     gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+3), new Float32Array(v4));
     return {v1, v2, v3, v4}; 
 }
+
+var stopMovingSquare = (arrayOfShapes, v1, v2, v3, v4) => {
+    arrayOfShapes[selected_shape.shape_index].vertices.v1 = v1;
+    arrayOfShapes[selected_shape.shape_index].vertices.v3 = v3;
+    arrayOfShapes[selected_shape.shape_index].vertices.v2 = v2;
+    arrayOfShapes[selected_shape.shape_index].vertices.v4 = v4;
+}
