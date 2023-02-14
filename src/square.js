@@ -1,43 +1,44 @@
 /* eslint no-console:0 consistent-return:0 */
 "use strict";
 
-canvas;
-var canvas, gl, index = 0;
+var gl;
+var index = 0;
+
+var canvas = document.querySelector("canvas");
+
+let createShapeRadio = document.getElementById("createShapeRadio");
+let selectShapeRadio = document.getElementById("selectShapeRadio");
+let dilationSlider = document.getElementById("dilation-slider");
+let dilationSliderLabel = document.querySelector("label[for='dilation-slider']");
+let colorPicker = document.getElementById("colorPicker");
+let colorPickerLabel = document.querySelector("label[for='colorPicker']");
+
+var arrayOfShapes = [];
+var shape_index = 0;
+var mouseDown = false;
+var mouseDownPosition = null;
+
+var clickMode = 0;
+var selected_shape = null;
+var selected_shape_center = null;
+
+var is_moving_shape = false;
+var clicked_vertex = null;
+
+var v1, v2, v3, v4;
+var default_color = [1, 1, 0, 1]; // yellow
+var first = true;
+
+var oldDilationSliderValue = 1;
 
 function main() {
-  canvas = document.querySelector("canvas");
-
   // Get A WebGL context
-  gl = WebGLUtils.setupWebGL( canvas );
+  var gl = WebGLUtils.setupWebGL( canvas );
 
   if (!gl) {
     alert( "WebGL isn't available" );
     return;
   }
-
-  let createShapeRadio = document.getElementById("createShapeRadio");
-  let selectShapeRadio = document.getElementById("selectShapeRadio");
-  let dilationSlider = document.getElementById("dilation-slider");
-  let dilationSliderLabel = document.querySelector("label[for='dilation-slider']");
-  let colorPicker = document.getElementById("colorPicker");
-  let colorPickerLabel = document.querySelector("label[for='colorPicker']");
-
-  var arrayOfShapes = [];
-  var shape_index = 0;
-  var mouseDown = false;
-  var mouseDownPosition = null;
-
-  var clickMode = 0;
-  var selected_shape = null;
-  var selected_shape_center = null;
-
-  var is_moving_shape = false;
-  var vertex_clicked = false;
-  var clicked_vertex = null;
-
-  var v1, v2, v3, v4;
-  var default_color = [1, 1, 0, 1]; // yellow
-  var first = true;
   
   // Get the strings for our GLSL shaders
   var vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
@@ -115,10 +116,10 @@ function main() {
   var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
   var offset = 0;        // start at the beginning of the buffer
   gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
-
-  var oldDilationSliderValue = 1;
+  
   dilationSlider.addEventListener("change", (e) => {
     if (selected_shape != null) {
+      gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
       let dilateValue = (dilationSlider.value / oldDilationSliderValue);
       gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array([selected_shape.vertices.v1[0] * dilateValue, selected_shape.vertices.v1[1] * dilateValue]));
       gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array([selected_shape.vertices.v3[0] * dilateValue, selected_shape.vertices.v3[1] * dilateValue]));
