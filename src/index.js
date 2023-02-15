@@ -13,7 +13,7 @@ let dilationSliderLabel = document.querySelector("label[for='dilation-slider']")
 let colorPicker = document.getElementById("colorPicker");
 let colorPickerLabel = document.querySelector("label[for='colorPicker']");
 let shapeCreateSelector = document.getElementById("shape-selector");
-let selectedCreateShape = 1;
+let selectedCreateShape = 0;
 var shape_enum = {
   0: "line",
   1: "square"
@@ -131,7 +131,13 @@ function main() {
     if (selected_shape != null) {
       gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
       let dilateValue = (dilationSlider.value / oldDilationSliderValue);
-      dilateSquare(gl, arrayOfShapes, selected_shape, dilateValue);
+      if (selected_shape.shape == 0) {
+        dilateLine(gl, arrayOfShapes, selected_shape, dilateValue);
+        
+      } else if (selected_shape.shape == 1) {
+        dilateSquare(gl, arrayOfShapes, selected_shape, dilateValue);
+
+      }
     }
     oldDilationSliderValue = dilationSlider.value;
   })
