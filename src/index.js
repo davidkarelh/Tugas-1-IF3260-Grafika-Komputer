@@ -16,7 +16,8 @@ let shapeCreateSelector = document.getElementById("shape-selector");
 let selectedCreateShape = 0;
 var shape_enum = {
   0: "line",
-  1: "square"
+  1: "square",
+  2: "rectangle"
 };
 
 var arrayOfShapes = [];
@@ -39,13 +40,13 @@ var oldDilationSliderValue = 1;
 
 function main() {
   // Get A WebGL context
-  var gl = WebGLUtils.setupWebGL( canvas );
+  var gl = WebGLUtils.setupWebGL(canvas);
 
   if (!gl) {
-    alert( "WebGL isn't available" );
+    alert("WebGL isn't available");
     return;
   }
-  
+
   // Get the strings for our GLSL shaders
   var vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
   var fragmentShaderSource = document.querySelector("#fragment-shader-2d").text;
@@ -80,7 +81,7 @@ function main() {
   gl.bufferData(gl.ARRAY_BUFFER, 20480, gl.STATIC_DRAW);
 
   // code above this line is initialization code.
-  
+
   // code below this line is rendering code.
   gl.canvas.width = (7 / 12) * window.innerWidth;
   gl.canvas.height = (7 / 12) * window.innerWidth;
@@ -126,17 +127,17 @@ function main() {
   shapeCreateSelector.addEventListener("change", (e) => {
     selectedCreateShape = parseInt(shapeCreateSelector.value);
   });
-  
+
   dilationSlider.addEventListener("change", (e) => {
     if (selected_shape != null) {
-      gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       let dilateValue = (dilationSlider.value / oldDilationSliderValue);
       if (selected_shape.shape == 0) {
         dilateLine(gl, arrayOfShapes, selected_shape, dilateValue);
-        
       } else if (selected_shape.shape == 1) {
         dilateSquare(gl, arrayOfShapes, selected_shape, dilateValue);
-
+      } else if (selected_shape.shape == 2) {
+        dilateRectangle(gl, arrayOfShapes, selected_shape, dilateValue);
       }
     }
     oldDilationSliderValue = dilationSlider.value;
@@ -160,24 +161,26 @@ function main() {
 
   colorPicker.addEventListener("input", (e) => {
     if (clicked_vertex != null && clickMode == 1) {
-      gl.bindBuffer( gl.ARRAY_BUFFER, colorBuffer);
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
       let rgb255 = colorPicker.value.convertToRGB();
       let rgb = rgb255.map((element) => element / 255).concat([1]);
       if (selected_shape.shape == 0) {
         changeColorVertexLine(gl, arrayOfShapes, selected_shape, rgb);
       } else if (selected_shape.shape == 1) {
         changeColorVertexSquare(gl, arrayOfShapes, selected_shape, rgb);
+      } else if (selected_shape.shape == 2) {
+        changeColorVertexRectangle(gl, arrayOfShapes, selected_shape, rgb);
       }
     }
   });
 
-  canvas.addEventListener("mousedown", function(event) {
+  canvas.addEventListener("mousedown", function (event) {
     mouseDown = true;
     mouseDownPosition = getPositionInCanvas(event);
     // console.log("mousedown");
   });
-  
-  canvas.addEventListener("mouseup", function(event) {
+
+  canvas.addEventListener("mouseup", function (event) {
     mouseDown = false;
     // console.log("mouseup");
     if (is_moving_shape) {
@@ -187,34 +190,38 @@ function main() {
         stopMovingLine(arrayOfShapes, selected_shape, v1, v2);
       } else if (selected_shape.shape == 1) {
         stopMovingSquare(arrayOfShapes, selected_shape, v1, v2, v3, v4);
+      } else if (selected_shape.shape == 2) {
+        stopMovingRectangle(arrayOfShapes, selected_shape, v1, v2, v3, v4);
       }
 
     }
   });
 
-  canvas.addEventListener("mouseleave", function(event) {
+  canvas.addEventListener("mouseleave", function (event) {
     mouseDown = false;
   });
 
-  canvas.addEventListener("click", function(event) {
+  canvas.addEventListener("click", function (event) {
     let position = getPositionInCanvas(event);
 
     if (clickMode == 0) {
       if (first) {
-        first = false;     
+        first = false;
         v1 = [position.x, position.y]
 
-        gl.bindBuffer( gl.ARRAY_BUFFER, colorBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 
         if (selectedCreateShape == 0) {
           firstClickCreateLine(gl, index, default_color);
         } else if (selectedCreateShape == 1) {
           firstClickCreateSquare(gl, index, default_color);
+        } else if (selectedCreateShape == 2) {
+          firstClickCreateRectangle(gl, index, default_color);
         }
-  
+
       } else {
         first = true;
-        gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
         if (selectedCreateShape == 0) {
           let result = secondClickCreateLine(gl, position, v1, v2, arrayOfShapes);
@@ -230,6 +237,13 @@ function main() {
           v4 = result.v4;
           index += 4;
 
+        } else if (selectedCreateShape == 2) {
+          let result = secondClickCreateRectangle(gl, position, v1, v2, v3, v4, arrayOfShapes);
+          v1 = result.v1;
+          v2 = result.v2;
+          v3 = result.v3;
+          v4 = result.v4;
+          index += 4;
         }
 
 
@@ -237,7 +251,6 @@ function main() {
       }
     } else if (clickMode == 1) {
       let shape = isInAShape(event, arrayOfShapes);
-
       if (shape != null) {
         selected_shape = shape;
         selected_shape_center = getCenterOfShape(selected_shape);
@@ -272,19 +285,25 @@ function main() {
     }
   });
 
-  canvas.addEventListener("mousemove", function(event) {
-    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
+  canvas.addEventListener("mousemove", function (event) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     let position = getPositionInCanvas(event);
     if (clickMode == 0) {
       canvas.style.cursor = "pointer";
-  
-      if(!first) {  
+
+      if (!first) {
         if (selectedCreateShape == 0) {
           let result = mouseMoveCreateLine(gl, position, v1, v2);
           v1 = result.v1;
           v2 = result.v2;
         } else if (selectedCreateShape == 1) {
           let result = mouseMoveCreateSquare(gl, position, v1, v2, v3, v4);
+          v1 = result.v1;
+          v2 = result.v2;
+          v3 = result.v3;
+          v4 = result.v4;
+        } else if (selectedCreateShape == 2) {
+          let result = mouseMoveCreateRectangle(gl, position, v1, v2, v3, v4);
           v1 = result.v1;
           v2 = result.v2;
           v3 = result.v3;
@@ -310,6 +329,12 @@ function main() {
             v2 = result.v2;
             v3 = result.v3;
             v4 = result.v4;
+          } else if (selected_shape.shape == 2) {
+            let result = moveRectangleCorner(gl, selected_shape, position, corner_position, correction, v1, v2, v3, v4);
+            v1 = result.v1;
+            v2 = result.v2;
+            v3 = result.v3;
+            v4 = result.v4;
           }
         } else {
           if (selected_shape.shape == 0) {
@@ -318,6 +343,12 @@ function main() {
             v2 = result.v2;
           } else if (selected_shape.shape == 1) {
             let result = moveSquare(gl, selected_shape, correction, v1, v2, v3, v4);
+            v1 = result.v1;
+            v2 = result.v2;
+            v3 = result.v3;
+            v4 = result.v4;
+          } else if (selected_shape.shape == 2) {
+            let result = moveRectangle(gl, selected_shape, correction, v1, v2, v3, v4);
             v1 = result.v1;
             v2 = result.v2;
             v3 = result.v3;
@@ -331,7 +362,7 @@ function main() {
   render();
 
   function render() {
-    gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.clear(gl.COLOR_BUFFER_BIT);
     // var drawLimit = first ? index : (index + 4);
 
     // for(var i = 0; i < drawLimit; i+=4) {
@@ -347,22 +378,27 @@ function main() {
     let i = 0;
     for (let shape of arrayOfShapes) {
       if (shape.shape == 0) {
-        gl.drawArrays( gl.LINES, i, 2 );
+        gl.drawArrays(gl.LINES, i, 2);
         i += 2;
 
       } else if (shape.shape == 1) {
-        gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
+        gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
         i += 4;
 
+      } else if (shape.shape == 2) {
+        gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
+        i += 4;
       }
 
     }
 
     if (clickMode == 0 && !first) {
       if (selectedCreateShape == 0) {
-        gl.drawArrays( gl.LINES, i, 2 );
+        gl.drawArrays(gl.LINES, i, 2);
       } else if (selectedCreateShape == 1) {
-        gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
+        gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
+      } else if (selectedCreateShape == 2) {
+        gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
       }
     }
 

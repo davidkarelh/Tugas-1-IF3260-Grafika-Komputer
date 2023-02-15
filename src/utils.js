@@ -10,7 +10,7 @@ function createShader(gl, type, source) {
     console.log(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
 }
-  
+
 function createProgram(gl, vertexShader, fragmentShader) {
     var program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -34,7 +34,7 @@ function getPositionInCanvas(event) {
 
 function isInAShape(event, arrayOfShapes) {
     var position = getPositionInCanvas(event);
-    
+
     for (shape of arrayOfShapes) {
         if (positionInShape(position, shape)) {
             return shape;
@@ -55,7 +55,7 @@ function positionInShape(position, shape) {
             Math.sqrt(Math.pow(v2[0] - v1[0], 2) + Math.pow(v2[1] - v2[1], 2))
         );
         return dist < 0.04;
-    } else if (shape.shape == 1) {
+    } else if (shape.shape == 1 || shape.shape == 2) {
         if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
             left = shape.vertices.v1[0];
             right = shape.vertices.v2[0];
@@ -63,7 +63,7 @@ function positionInShape(position, shape) {
             right = shape.vertices.v1[0];
             left = shape.vertices.v2[0];
         }
-    
+
         if (shape.vertices.v1[1] < shape.vertices.v2[1]) {
             bottom = shape.vertices.v1[1];
             top = shape.vertices.v2[1];
@@ -71,7 +71,7 @@ function positionInShape(position, shape) {
             top = shape.vertices.v1[1];
             bottom = shape.vertices.v2[1];
         }
-    
+
         return (position.x <= right && position.x >= left && position.y >= bottom && position.y <= top);
     }
 
@@ -84,7 +84,7 @@ function positionInCornerShape(position, shape) {
         } else if (Math.abs(position.x - shape.vertices.v2[0]) + Math.abs(position.y - shape.vertices.v2[1]) < 0.05) {
             return "v2";
         }
-    } else if (shape.shape == 1) {
+    } else if (shape.shape == 1 || shape.shape == 2) {
         if (Math.abs(position.x - shape.vertices.v1[0]) + Math.abs(position.y - shape.vertices.v1[1]) < 0.05) {
             return "v1";
         } else if (Math.abs(position.x - shape.vertices.v2[0]) + Math.abs(position.y - shape.vertices.v2[1]) < 0.05) {
@@ -103,7 +103,7 @@ function getCenterOfShape(shape) {
 
     if (shape.shape == 0) {
         return [(shape.vertices.v1[0] + shape.vertices.v2[0]) / 2, (shape.vertices.v1[1] + shape.vertices.v2[1]) / 2];
-    } else if (shape.shape == 1) {
+    } else if (shape.shape == 1 || shape.shape == 2) {
 
         if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
             left = shape.vertices.v1[0];
@@ -112,7 +112,7 @@ function getCenterOfShape(shape) {
             right = shape.vertices.v1[0];
             left = shape.vertices.v2[0];
         }
-    
+
         if (shape.vertices.v1[1] < shape.vertices.v2[1]) {
             bottom = shape.vertices.v1[1];
             top = shape.vertices.v2[1];
@@ -120,15 +120,15 @@ function getCenterOfShape(shape) {
             top = shape.vertices.v1[1];
             bottom = shape.vertices.v2[1];
         }
-    
+
         var ret = [(right + left) / 2, (top + bottom) / 2];
         return ret;
     }
     return null;
 }
 
-String.prototype.convertToRGB = function(){
-    if(this.length != 7){
+String.prototype.convertToRGB = function () {
+    if (this.length != 7) {
         throw "Only seven-digit hex colors are allowed.";
     }
 
