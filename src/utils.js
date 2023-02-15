@@ -46,34 +46,54 @@ function isInAShape(event, arrayOfShapes) {
 function positionInShape(position, shape) {
     var left, right, top, bottom;
 
-    if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
-        left = shape.vertices.v1[0];
-        right = shape.vertices.v2[0];
-    } else {
-        right = shape.vertices.v1[0];
-        left = shape.vertices.v2[0];
+    if (shape.shape == 0) {
+        let v1 = shape.vertices.v1;
+        let v2 = shape.vertices.v2;
+        let dist = (
+            Math.abs((v2[0] - v1[0]) * (v1[1] - position.y) - (v1[0] - position.x) * (v2[1] - v1[1]))
+            /
+            Math.sqrt(Math.pow(v2[0] - v1[0], 2) + Math.pow(v2[1] - v2[1], 2))
+        );
+        return dist < 0.04;
+    } else if (shape.shape == 1) {
+        if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
+            left = shape.vertices.v1[0];
+            right = shape.vertices.v2[0];
+        } else {
+            right = shape.vertices.v1[0];
+            left = shape.vertices.v2[0];
+        }
+    
+        if (shape.vertices.v1[1] < shape.vertices.v2[1]) {
+            bottom = shape.vertices.v1[1];
+            top = shape.vertices.v2[1];
+        } else {
+            top = shape.vertices.v1[1];
+            bottom = shape.vertices.v2[1];
+        }
+    
+        return (position.x <= right && position.x >= left && position.y >= bottom && position.y <= top);
     }
 
-    if (shape.vertices.v1[1] < shape.vertices.v2[1]) {
-        bottom = shape.vertices.v1[1];
-        top = shape.vertices.v2[1];
-    } else {
-        top = shape.vertices.v1[1];
-        bottom = shape.vertices.v2[1];
-    }
-
-    return (position.x <= right && position.x >= left && position.y >= bottom && position.y <= top);
 }
 
 function positionInCornerShape(position, shape) {
-    if (Math.abs(position.x - shape.vertices.v1[0]) + Math.abs(position.y - shape.vertices.v1[1]) < 0.05) {
-        return "v1";
-    } else if (Math.abs(position.x - shape.vertices.v2[0]) + Math.abs(position.y - shape.vertices.v2[1]) < 0.05) {
-        return "v2";
-    } else if (Math.abs(position.x - shape.vertices.v3[0]) + Math.abs(position.y - shape.vertices.v3[1]) < 0.05) {
-        return "v3";
-    } else if (Math.abs(position.x - shape.vertices.v4[0]) + Math.abs(position.y - shape.vertices.v4[1]) < 0.05) {
-        return "v4";
+    if (shape.shape == 0) {
+        if (Math.abs(position.x - shape.vertices.v1[0]) + Math.abs(position.y - shape.vertices.v1[1]) < 0.05) {
+            return "v1";
+        } else if (Math.abs(position.x - shape.vertices.v2[0]) + Math.abs(position.y - shape.vertices.v2[1]) < 0.05) {
+            return "v2";
+        }
+    } else if (shape.shape == 1) {
+        if (Math.abs(position.x - shape.vertices.v1[0]) + Math.abs(position.y - shape.vertices.v1[1]) < 0.05) {
+            return "v1";
+        } else if (Math.abs(position.x - shape.vertices.v2[0]) + Math.abs(position.y - shape.vertices.v2[1]) < 0.05) {
+            return "v2";
+        } else if (Math.abs(position.x - shape.vertices.v3[0]) + Math.abs(position.y - shape.vertices.v3[1]) < 0.05) {
+            return "v3";
+        } else if (Math.abs(position.x - shape.vertices.v4[0]) + Math.abs(position.y - shape.vertices.v4[1]) < 0.05) {
+            return "v4";
+        }
     }
     return null;
 }
@@ -81,24 +101,30 @@ function positionInCornerShape(position, shape) {
 function getCenterOfShape(shape) {
     var left, right, top, bottom;
 
-    if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
-        left = shape.vertices.v1[0];
-        right = shape.vertices.v2[0];
-    } else {
-        right = shape.vertices.v1[0];
-        left = shape.vertices.v2[0];
-    }
+    if (shape.shape == 0) {
+        return [(shape.vertices.v1[0] + shape.vertices.v2[0]) / 2, (shape.vertices.v1[1] + shape.vertices.v2[1]) / 2];
+    } else if (shape.shape == 1) {
 
-    if (shape.vertices.v1[1] < shape.vertices.v2[1]) {
-        bottom = shape.vertices.v1[1];
-        top = shape.vertices.v2[1];
-    } else {
-        top = shape.vertices.v1[1];
-        bottom = shape.vertices.v2[1];
+        if (shape.vertices.v1[0] < shape.vertices.v2[0]) {
+            left = shape.vertices.v1[0];
+            right = shape.vertices.v2[0];
+        } else {
+            right = shape.vertices.v1[0];
+            left = shape.vertices.v2[0];
+        }
+    
+        if (shape.vertices.v1[1] < shape.vertices.v2[1]) {
+            bottom = shape.vertices.v1[1];
+            top = shape.vertices.v2[1];
+        } else {
+            top = shape.vertices.v1[1];
+            bottom = shape.vertices.v2[1];
+        }
+    
+        var ret = [(right + left) / 2, (top + bottom) / 2];
+        return ret;
     }
-
-    var ret = [(right + left) / 2, (top + bottom) / 2];
-    return ret;
+    return null;
 }
 
 String.prototype.convertToRGB = function(){

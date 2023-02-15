@@ -53,7 +53,7 @@ var secondClickCreateSquare = (gl, position, v1, v2, v3, v4, arrayOfShapes) => {
     gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+3), new Float32Array(v4));
 
     arrayOfShapes.push({
-        shape: 0,
+        shape: 1,
         shape_index,
         vertices: {
             v1, v2, v3, v4
@@ -180,6 +180,7 @@ var moveSquare = (gl, selected_shape, correction, v1, v2, v3, v4) => {
     v2 = [selected_shape.vertices.v2[0] + correction.x, selected_shape.vertices.v2[1] + correction.y];
     v3 = [selected_shape.vertices.v3[0] + correction.x, selected_shape.vertices.v3[1] + correction.y];
     v4 = [selected_shape.vertices.v4[0] + correction.x, selected_shape.vertices.v4[1] + correction.y];
+    // console.log(v1);
     
     gl.bufferSubData(gl.ARRAY_BUFFER, 8*selected_shape.index, new Float32Array(v1));
     gl.bufferSubData(gl.ARRAY_BUFFER, 8*(selected_shape.index+1), new Float32Array(v3));
@@ -188,7 +189,7 @@ var moveSquare = (gl, selected_shape, correction, v1, v2, v3, v4) => {
     return {v1, v2, v3, v4}; 
 }
 
-var stopMovingSquare = (arrayOfShapes, v1, v2, v3, v4) => {
+var stopMovingSquare = (arrayOfShapes, selected_shape, v1, v2, v3, v4) => {
     arrayOfShapes[selected_shape.shape_index].vertices.v1 = v1;
     arrayOfShapes[selected_shape.shape_index].vertices.v3 = v3;
     arrayOfShapes[selected_shape.shape_index].vertices.v2 = v2;

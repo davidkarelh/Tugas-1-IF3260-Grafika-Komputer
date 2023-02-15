@@ -12,6 +12,12 @@ let dilationSlider = document.getElementById("dilation-slider");
 let dilationSliderLabel = document.querySelector("label[for='dilation-slider']");
 let colorPicker = document.getElementById("colorPicker");
 let colorPickerLabel = document.querySelector("label[for='colorPicker']");
+let shapeCreateSelector = document.getElementById("shape-selector");
+let selectedCreateShape = 1;
+var shape_enum = {
+  0: "line",
+  1: "square"
+};
 
 var arrayOfShapes = [];
 var shape_index = 0;
@@ -30,11 +36,6 @@ var default_color = [1, 1, 0, 1]; // yellow
 var first = true;
 
 var oldDilationSliderValue = 1;
-
-var shape_enum = {
-  0: "line",
-  1: "square"
-};
 
 function main() {
   // Get A WebGL context
@@ -121,6 +122,10 @@ function main() {
   var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
   var offset = 0;        // start at the beginning of the buffer
   gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+
+  shapeCreateSelector.addEventListener("change", (e) => {
+    selectedCreateShape = parseInt(shapeCreateSelector.value);
+  });
   
   dilationSlider.addEventListener("change", (e) => {
     if (selected_shape != null) {
@@ -152,8 +157,11 @@ function main() {
       gl.bindBuffer( gl.ARRAY_BUFFER, colorBuffer);
       let rgb255 = colorPicker.value.convertToRGB();
       let rgb = rgb255.map((element) => element / 255).concat([1]);
-
-      changeColorVertexSquare(gl, arrayOfShapes, selected_shape, rgb);
+      if (selected_shape.shape == 0) {
+        changeColorVertexLine(gl, arrayOfShapes, selected_shape, rgb);
+      } else if (selected_shape.shape == 1) {
+        changeColorVertexSquare(gl, arrayOfShapes, selected_shape, rgb);
+      }
     }
   });
 
@@ -168,7 +176,13 @@ function main() {
     // console.log("mouseup");
     if (is_moving_shape) {
       is_moving_shape = false;
-      stopMovingSquare(arrayOfShapes, v1, v2, v3, v4);
+
+      if (selected_shape.shape == 0) {
+        stopMovingLine(arrayOfShapes, selected_shape, v1, v2);
+      } else if (selected_shape.shape == 1) {
+        stopMovingSquare(arrayOfShapes, selected_shape, v1, v2, v3, v4);
+      }
+
     }
   });
 
@@ -186,19 +200,32 @@ function main() {
 
         gl.bindBuffer( gl.ARRAY_BUFFER, colorBuffer);
 
-        firstClickCreateSquare(gl, index, default_color);
+        if (selectedCreateShape == 0) {
+          firstClickCreateLine(gl, index, default_color);
+        } else if (selectedCreateShape == 1) {
+          firstClickCreateSquare(gl, index, default_color);
+        }
   
       } else {
         first = true;
         gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer);
 
-        let result = secondClickCreateSquare(gl, position, v1, v2, v3, v4, arrayOfShapes);
-        v1 = result.v1;
-        v2 = result.v2;
-        v3 = result.v3;
-        v4 = result.v4;
+        if (selectedCreateShape == 0) {
+          let result = secondClickCreateLine(gl, position, v1, v2, arrayOfShapes);
+          v1 = result.v1;
+          v2 = result.v2;
+          index += 2;
 
-        index += 4;
+        } else if (selectedCreateShape == 1) {
+          let result = secondClickCreateSquare(gl, position, v1, v2, v3, v4, arrayOfShapes);
+          v1 = result.v1;
+          v2 = result.v2;
+          v3 = result.v3;
+          v4 = result.v4;
+          index += 4;
+
+        }
+
 
         shape_index += 1;
       }
@@ -246,11 +273,17 @@ function main() {
       canvas.style.cursor = "pointer";
   
       if(!first) {  
-        let result = mouseMoveCreateSquare(gl, position, v1, v2, v3, v4);
-        v1 = result.v1;
-        v2 = result.v2;
-        v3 = result.v3;
-        v4 = result.v4;
+        if (selectedCreateShape == 0) {
+          let result = mouseMoveCreateLine(gl, position, v1, v2);
+          v1 = result.v1;
+          v2 = result.v2;
+        } else if (selectedCreateShape == 1) {
+          let result = mouseMoveCreateSquare(gl, position, v1, v2, v3, v4);
+          v1 = result.v1;
+          v2 = result.v2;
+          v3 = result.v3;
+          v4 = result.v4;
+        }
       }
     } else if (clickMode == 1) {
       if (selected_shape != null && mouseDown && positionInShape(mouseDownPosition, selected_shape)) {
@@ -261,17 +294,29 @@ function main() {
         let correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
 
         if (corner_position != null) {
-          let result = moveSquareCorner(gl, selected_shape, position, corner_position, correction, v1, v2, v3, v4);
-          v1 = result.v1;
-          v2 = result.v2;
-          v3 = result.v3;
-          v4 = result.v4;
+          if (selected_shape.shape == 0) {
+            let result = moveLineVertex(gl, selected_shape, position, corner_position, v1, v2);
+            v1 = result.v1;
+            v2 = result.v2;
+          } else if (selected_shape.shape == 1) {
+            let result = moveSquareCorner(gl, selected_shape, position, corner_position, correction, v1, v2, v3, v4);
+            v1 = result.v1;
+            v2 = result.v2;
+            v3 = result.v3;
+            v4 = result.v4;
+          }
         } else {
-          let result = moveSquare(gl, selected_shape, correction, v1, v2, v3, v4);
-          v1 = result.v1;
-          v2 = result.v2;
-          v3 = result.v3;
-          v4 = result.v4;
+          if (selected_shape.shape == 0) {
+            let result = moveLine(gl, selected_shape, correction, v1, v2);
+            v1 = result.v1;
+            v2 = result.v2;
+          } else if (selected_shape.shape == 1) {
+            let result = moveSquare(gl, selected_shape, correction, v1, v2, v3, v4);
+            v1 = result.v1;
+            v2 = result.v2;
+            v3 = result.v3;
+            v4 = result.v4;
+          }
         }
       }
     }
@@ -281,10 +326,38 @@ function main() {
 
   function render() {
     gl.clear( gl.COLOR_BUFFER_BIT );
-    var drawLimit = first ? index : (index + 4);
+    // var drawLimit = first ? index : (index + 4);
 
-    for(var i = 0; i < drawLimit; i+=4) {
-      gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
+    // for(var i = 0; i < drawLimit; i+=4) {
+    //   gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
+    // }
+
+    // var drawLimit = first ? index : (index + 2);
+
+    // for(var i = 0; i < drawLimit; i+=2) {
+    //   gl.drawArrays( gl.LINES, i, 2 );
+    // }
+
+    let i = 0;
+    for (let shape of arrayOfShapes) {
+      if (shape.shape == 0) {
+        gl.drawArrays( gl.LINES, i, 2 );
+        i += 2;
+
+      } else if (shape.shape == 1) {
+        gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
+        i += 4;
+
+      }
+
+    }
+
+    if (clickMode == 0 && !first) {
+      if (selectedCreateShape == 0) {
+        gl.drawArrays( gl.LINES, i, 2 );
+      } else if (selectedCreateShape == 1) {
+        gl.drawArrays( gl.TRIANGLE_FAN, i, 4 );
+      }
     }
 
     window.requestAnimFrame(render);

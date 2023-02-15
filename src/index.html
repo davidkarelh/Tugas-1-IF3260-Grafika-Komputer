@@ -15,6 +15,13 @@
             </div>
             <div class="col-4 border border-primary-subtle bg-dark text-light">
                 <div class="row ms-3">
+                    <label><strong>Select Shape to Draw</strong></label>
+                    <select id="shape-selector" class="form-select" aria-label="Default select example">
+                        <option value="0">Line</option>
+                        <option value="1" selected>Square</option>
+                        <option value="2">Rectangle</option>
+                        <option value="3">Polygon</option>
+                    </select>
                     <label><strong>Click Mode</strong></label>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="flexRadioDefault" id="createShapeRadio" checked>
@@ -78,6 +85,7 @@
 
         <script src="./webgl-utils.js"></script>
         <script src="./utils.js"></script>
+        <script src="./line.js"></script>
         <script src="./square.js"></script>
         <script src="./index.js"></script>
     </body>
