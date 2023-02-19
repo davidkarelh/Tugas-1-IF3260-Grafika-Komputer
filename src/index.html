@@ -39,15 +39,28 @@
                         Select Shape
                     </label>
                 </div>
-                <button id="polygon-save" hidden="true">Save</button>
+                <button id="polygon-save" hidden="true">Save Polygon</button>
 
-                <strong><label for="dilation-slider" class="form-label">Shape Dilation (disabled, click a shape to
-                        use)</label></strong>
-                <input type="range" class="form-range" name="dilation-slider" id="dilation-slider" min="0.25" max="3"
-                    value="1" step="0.25" disabled>
-                <strong><label class="form-label" for="colorPicker">Select Vertex Color (disabled, click a vertex to
-                        use)</label></strong>
-                <input class="form-range" type="color" name="colorPicker" id="colorPicker" value="#FFFF00" disabled>
+                <div class="model-file">
+                    <input type="text" id="model-file-name" placeholder="Model File Name" />
+                    <button id="save-model">Save Model</button>
+                    <input type="file" id="model-file-load" accept=".json" />
+                    <button id="load-model">Load Model</button>
+                </div>
+
+                <div id="dilation-slider-container" hidden="true">
+                    <strong>
+                        <label for="dilation-slider" class="form-label">Shape Dilation</label>
+                    </strong>
+                    <input type="range" class="form-range" name="dilation-slider" id="dilation-slider" min="0.25"
+                        max="3" value="1" step="0.25">
+                </div>
+                <div id="colorPicker-container" hidden="true">
+                    <strong>
+                        <label class="form-label" for="colorPicker">Select Vertex Color</label>
+                    </strong>
+                    <input class="form-range" type="color" name="colorPicker" id="colorPicker" value="#FFFF00">
+                </div>
             </div>
         </div>
     </div>

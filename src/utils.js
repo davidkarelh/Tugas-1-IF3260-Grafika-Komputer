@@ -176,3 +176,78 @@ function isInsidePolygon(cur_coord, vertices) {
     
     return inside;
 }
+
+function saveModel() {
+    let fileName = document.getElementById("model-file-name").value;
+
+    if (!fileName) {
+        fileName = "model-" + new Date().getTime();
+    }
+    fileName += ".json";
+
+    const element = document.createElement('a');
+
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(arrayOfShapes)));
+    element.setAttribute('download', fileName);
+    element.style.display = 'none';
+
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    alert("Model saved successfully!");
+}
+
+function loadModel(gl, positionBuffer, colorBuffer) {
+    const file = document.getElementById('model-file-load').files[0];
+    if (!file) {
+        alert("No file selected");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        for (let shape of JSON.parse(e.target.result)) {
+            arrayOfShapes.push({
+                shape: shape.shape,
+                shape_index,
+                vertices: shape.vertices,
+                colors: shape.colors,
+                index,
+                nPolygon: shape.nPolygon ?? null,
+            })
+
+            if (shape.shape == 3 || shape.shape == 4) {
+                polygonPointsArray[shape_index] = shape;
+            }
+            
+            if (shape.shape == 1 || shape.shape == 2) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16*index, new Float32Array(shape.colors.v1));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index+1), new Float32Array(shape.colors.v3));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index+2), new Float32Array(shape.colors.v2));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index+3), new Float32Array(shape.colors.v4));
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, new Float32Array(shape.vertices.v1));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+1), new Float32Array(shape.vertices.v3));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+2), new Float32Array(shape.vertices.v2));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+3), new Float32Array(shape.vertices.v4));
+                index += 4;
+            } else {
+                for (let vertice in shape.colors) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, new Float32Array(shape.colors[vertice]));
+                    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, new Float32Array(shape.vertices[vertice]));
+                    index++;
+                }
+            }
+            
+            shape_index++;
+        }
+        
+        alert("Model loaded successfully!");
+        document.getElementById('model-file-load').value = "";
+    }
+    reader.readAsText(file);
+}

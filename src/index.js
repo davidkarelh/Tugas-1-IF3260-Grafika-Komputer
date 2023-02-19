@@ -8,12 +8,16 @@ var canvas = document.querySelector("canvas");
 
 let createShapeRadio = document.getElementById("createShapeRadio");
 let selectShapeRadio = document.getElementById("selectShapeRadio");
+let dilationSliderContainer = document.getElementById("dilation-slider-container");
 let dilationSlider = document.getElementById("dilation-slider");
 let dilationSliderLabel = document.querySelector("label[for='dilation-slider']");
+let colorPickerContainer = document.getElementById("colorPicker-container");
 let colorPicker = document.getElementById("colorPicker");
 let colorPickerLabel = document.querySelector("label[for='colorPicker']");
 let shapeCreateSelector = document.getElementById("shape-selector");
 let polygonSaveButton = document.getElementById("polygon-save");
+let saveModelButton = document.getElementById("save-model");
+let loadModelButton = document.getElementById("load-model");
 let selectedCreateShape = 0;
 var shape_enum = {
   0: "line",
@@ -153,8 +157,9 @@ function main() {
     clickMode = 0;
     selected_shape = null;
     selected_shape_center = null;
-    dilationSlider.disabled = true;
-    dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
+    dilationSliderContainer.hidden = true;
+    // dilationSlider.disabled = true;
+    // dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
     dilationSlider.value = 1;
     oldDilationSliderValue = 1;
     let rgb = default_color.map((element) => Math.round(element * 255));
@@ -186,6 +191,14 @@ function main() {
     finalizePolygon(gl, selectedCreateShape, positionBuffer);
     shape_index++;
   })
+
+  saveModelButton.addEventListener("click", (e) => {
+    saveModel();
+  });
+
+  loadModelButton.addEventListener("click", (e) => {
+    loadModel(gl, positionBuffer, colorBuffer);
+  });
 
   canvas.addEventListener("mousedown", function (event) {
     mouseDown = true;
@@ -248,7 +261,6 @@ function main() {
           v1 = result.v1;
           v2 = result.v2;
           index += 2;
-
         } else if (selectedCreateShape == 1) {
           let result = secondClickCreateSquare(gl, position, v1, v2, v3, v4, arrayOfShapes);
           v1 = result.v1;
@@ -274,33 +286,28 @@ function main() {
       if (shape != null) {
         selected_shape = shape;
         selected_shape_center = getCenterOfShape(selected_shape);
-        dilationSlider.disabled = false;
-        dilationSliderLabel.innerText = "Shape Dilation";
+        dilationSliderContainer.hidden = false;
         
         let corner_position = positionInCornerShape(position, selected_shape);
         if (corner_position != null) {
           clicked_vertex = corner_position;
-          colorPickerLabel.innerText = "Select Vertex Color";
-          colorPicker.disabled = false;
+          colorPickerContainer.hidden = false;
           let color = arrayOfShapes[selected_shape.shape_index].colors[corner_position];
           let rgb = color.map((element) => Math.round(element * 255));
           colorPicker.value = rgbToHex(rgb);
         } else {
           clicked_vertex = null;
-          colorPickerLabel.innerText = "Select Vertex Color (disabled, click a vertex to use)";
-          colorPicker.disabled = true;
+          colorPickerContainer.hidden = true;
         }
 
       } else {
         selected_shape = null;
         selected_shape_center = null;
-        dilationSlider.disabled = true;
-        dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
+        dilationSliderContainer.hidden = true;
         dilationSlider.value = 1;
         oldDilationSliderValue = 1;
         clicked_vertex = null;
-        colorPickerLabel.innerText = "Select Vertex Color (disabled, click a vertex to use)";
-        colorPicker.disabled = true;
+        colorPickerContainer.hidden = true;
       }
     }
   });
