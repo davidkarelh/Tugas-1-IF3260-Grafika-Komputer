@@ -26,7 +26,7 @@ var shape_index = 0;
 var mouseDown = false;
 var mouseDownPosition = null;
 var polygonMode = false;
-var polygonPointsArray = [];
+var polygonPointsArray = {};
 
 var clickMode = 0;
 var selected_shape = null;
@@ -129,8 +129,8 @@ function main() {
 
   shapeCreateSelector.addEventListener("change", (e) => {
     selectedCreateShape = parseInt(shapeCreateSelector.value);
-    index -= polygonPointsArray.length;
-    polygonPointsArray = [];
+    index -= polygonPointsArray[shape_index] ? polygonPointsArray[shape_index].length : 0;
+    delete polygonPointsArray[shape_index];
     polygonMode = selectedCreateShape == 3 || selectedCreateShape == 4;
   });
 
@@ -177,14 +177,13 @@ function main() {
       } else if (selected_shape.shape == 2) {
         changeColorVertexRectangle(gl, arrayOfShapes, selected_shape, rgb);
       } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
-        changeColorVertexPolygon(gl, arrayOfShapes, selected_shape, rgb);
+        changeColorVertexPolygon(gl, selected_shape, rgb);
       }
     }
   });
 
   polygonSaveButton.addEventListener("click", (e) => {
-    finalizePolygon(gl, arrayOfShapes, selectedCreateShape, positionBuffer);
-    polygonPointsArray = [];
+    finalizePolygon(gl, selectedCreateShape, positionBuffer);
     shape_index++;
   })
 
@@ -206,6 +205,8 @@ function main() {
         stopMovingSquare(arrayOfShapes, selected_shape, v1, v2, v3, v4);
       } else if (selected_shape.shape == 2) {
         stopMovingRectangle(arrayOfShapes, selected_shape, v1, v2, v3, v4);
+      } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
+        stopMovingPolygon(selected_shape);
       }
 
     }
@@ -222,7 +223,7 @@ function main() {
       if (polygonMode) {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 
-        addPolygonPoint(gl, position, polygonPointsArray, index, default_color, positionBuffer);
+        addPolygonPoint(gl, position, index, default_color, positionBuffer);
         index++;
       } else if (first) {
         first = false;
@@ -382,7 +383,7 @@ function main() {
             v3 = result.v3;
             v4 = result.v4;
           } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
-            // TODO implement translasi
+            movePolygon(gl, selected_shape, position, mouseDownPosition);
           }
         }
       }
@@ -426,6 +427,7 @@ function main() {
 
     }
 
+    let polygonLength = polygonPointsArray[shape_index] ? polygonPointsArray[shape_index].length : 0;
     if (clickMode == 0 && (!first || polygonMode)) {
       if (selectedCreateShape == 0) {
         gl.drawArrays(gl.LINES, i, 2);
@@ -434,9 +436,9 @@ function main() {
       } else if (selectedCreateShape == 2) {
         gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
       } else if (selectedCreateShape == 3) {
-        gl.drawArrays(gl.TRIANGLE_STRIP, i, polygonPointsArray.length+1);
+        gl.drawArrays(gl.TRIANGLE_STRIP, i, polygonLength + 1);
       } else if (selectedCreateShape == 4) {
-        gl.drawArrays(gl.TRIANGLE_FAN, i, polygonPointsArray.length+1);
+        gl.drawArrays(gl.TRIANGLE_FAN, i, polygonLength + 1);
       }
     }
 

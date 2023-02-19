@@ -174,6 +174,5 @@ function isInsidePolygon(cur_coord, vertices) {
         if (intersect) inside = !inside;
     }
     
-    console.log(inside);
     return inside;
 }
