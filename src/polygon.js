@@ -33,7 +33,7 @@ var finalizePolygon = (gl, arrayOfShapes, shape, positionBuffer) => {
     shape_index,
     vertices,
     colors,
-    index,
+    index: idx,
     nPolygon
   });
 
@@ -41,9 +41,7 @@ var finalizePolygon = (gl, arrayOfShapes, shape, positionBuffer) => {
 }
 
 var changeColorVertexPolygon = (gl, arrayOfShapes, selected_shape, rgb) => {
-  const offSet = getOffset(selected_shape);
-
-  gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (offSet + parseInt(clicked_vertex)), new Float32Array(rgb));
+  gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (selected_shape.index + parseInt(clicked_vertex)), new Float32Array(rgb));
 
   selected_shape.colors[clicked_vertex] = rgb;
   arrayOfShapes[selected_shape.shape_index].colors[clicked_vertex] = rgb;
@@ -52,7 +50,7 @@ var changeColorVertexPolygon = (gl, arrayOfShapes, selected_shape, rgb) => {
 var movePolygonVertex = (gl, selected_shape, position) => {
   const offSet = getOffset(selected_shape);
 
-  gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (offSet + parseInt(clicked_vertex)), new Float32Array([position.x, position.y]));
+  gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (selected_shape.index + parseInt(clicked_vertex)), new Float32Array([position.x, position.y]));
   
   selected_shape.vertices[clicked_vertex] = [position.x, position.y];
   arrayOfShapes[selected_shape.shape_index].vertices[clicked_vertex] = [position.x, position.y];

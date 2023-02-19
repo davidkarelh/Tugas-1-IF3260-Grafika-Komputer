@@ -157,25 +157,6 @@ function rgbToHex(rgb) {
     return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
 }
 
-function getOffset(selected_shape) {
-    let shapeSides = {
-        0: 2,
-        1: 4,
-        2: 4,
-    }
-    
-    let offSet = 0;
-    for (let i = 0; i < selected_shape.shape_index; i++) {
-        if (shapeSides[arrayOfShapes[i].shape]) {
-            offSet += shapeSides[arrayOfShapes[i].shape];
-        } else {
-            offSet += arrayOfShapes[i].nPolygon;
-        }
-    }
-
-    return offSet;
-}
-
 function isInsidePolygon(cur_coord, vertices) {
     let polygon = [];
     for (let key in vertices) {

@@ -362,7 +362,7 @@ function main() {
             v3 = result.v3;
             v4 = result.v4;
           } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
-            movePolygonVertex(gl, selected_shape, position, corner_position);
+            movePolygonVertex(gl, selected_shape, position);
           }
         } else {
           if (selected_shape.shape == 0) {
