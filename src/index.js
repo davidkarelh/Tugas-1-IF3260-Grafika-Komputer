@@ -148,6 +148,8 @@ function main() {
         dilateSquare(gl, arrayOfShapes, selected_shape, dilateValue);
       } else if (selected_shape.shape == 2) {
         dilateRectangle(gl, arrayOfShapes, selected_shape, dilateValue);
+      } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
+        dilatePolygon(gl, dilateValue);
       }
     }
     oldDilationSliderValue = dilationSlider.value;

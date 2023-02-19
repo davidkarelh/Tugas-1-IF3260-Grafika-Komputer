@@ -65,6 +65,17 @@ var movePolygon = (gl, selected_shape, position, mouseDownPosition) => {
   }
 }
 
+var dilatePolygon = (gl, dilateValue) => {
+  const idx = selected_shape.index;
+  
+  for (let i = 0; i < selected_shape.nPolygon; i++) {
+    let newPoint = [selected_shape.vertices[i][0] * dilateValue, selected_shape.vertices[i][1] * dilateValue];
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (idx+i), new Float32Array(newPoint));
+    polygonPointsArray[selected_shape.shape_index][i] = newPoint;
+    arrayOfShapes[selected_shape.shape_index].vertices[i] = newPoint;
+  }
+}
+
 var stopMovingPolygon = (selected_shape) => {
   for (let i = 0; i < selected_shape.nPolygon; i++) {
     arrayOfShapes[selected_shape.shape_index].vertices[i] = polygonPointsArray[selected_shape.shape_index][i];
