@@ -73,8 +73,9 @@ function positionInShape(position, shape) {
         }
 
         return (position.x <= right && position.x >= left && position.y >= bottom && position.y <= top);
+    } else if (shape.shape == 3 || shape.shape == 4) {
+        return isInsidePolygon(position, shape.vertices);
     }
-
 }
 
 function positionInCornerShape(position, shape) {
@@ -93,6 +94,12 @@ function positionInCornerShape(position, shape) {
             return "v3";
         } else if (Math.abs(position.x - shape.vertices.v4[0]) + Math.abs(position.y - shape.vertices.v4[1]) < 0.05) {
             return "v4";
+        }
+    } else if (shape.shape == 3 || shape.shape == 4) {
+        for (let vertice in shape.vertices) {
+            if (Math.abs(position.x - shape.vertices[vertice][0]) + Math.abs(position.y - shape.vertices[vertice][1]) < 0.05) {
+                return vertice;
+            }
         }
     }
     return null;
@@ -148,4 +155,44 @@ function componentToHex(c) {
 
 function rgbToHex(rgb) {
     return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
+}
+
+function getOffset(selected_shape) {
+    let shapeSides = {
+        0: 2,
+        1: 4,
+        2: 4,
+    }
+    
+    let offSet = 0;
+    for (let i = 0; i < selected_shape.shape_index; i++) {
+        if (shapeSides[arrayOfShapes[i].shape]) {
+            offSet += shapeSides[arrayOfShapes[i].shape];
+        } else {
+            offSet += arrayOfShapes[i].nPolygon;
+        }
+    }
+
+    return offSet;
+}
+
+function isInsidePolygon(cur_coord, vertices) {
+    let polygon = [];
+    for (let key in vertices) {
+        polygon.push(vertices[key]);
+    }
+    
+    const x = cur_coord.x, y = cur_coord.y;
+    var inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        var xi = polygon[i][0], yi = polygon[i][1];
+        var xj = polygon[j][0], yj = polygon[j][1];
+        
+        var intersect = ((yi > y) != (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    
+    console.log(inside);
+    return inside;
 }

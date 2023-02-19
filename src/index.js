@@ -13,6 +13,7 @@ let dilationSliderLabel = document.querySelector("label[for='dilation-slider']")
 let colorPicker = document.getElementById("colorPicker");
 let colorPickerLabel = document.querySelector("label[for='colorPicker']");
 let shapeCreateSelector = document.getElementById("shape-selector");
+let polygonSaveButton = document.getElementById("polygon-save");
 let selectedCreateShape = 0;
 var shape_enum = {
   0: "line",
@@ -24,6 +25,8 @@ var arrayOfShapes = [];
 var shape_index = 0;
 var mouseDown = false;
 var mouseDownPosition = null;
+var polygonMode = false;
+var polygonPointsArray = [];
 
 var clickMode = 0;
 var selected_shape = null;
@@ -126,6 +129,9 @@ function main() {
 
   shapeCreateSelector.addEventListener("change", (e) => {
     selectedCreateShape = parseInt(shapeCreateSelector.value);
+    index -= polygonPointsArray.length;
+    polygonPointsArray = [];
+    polygonMode = selectedCreateShape == 3 || selectedCreateShape == 4;
   });
 
   dilationSlider.addEventListener("change", (e) => {
@@ -170,9 +176,17 @@ function main() {
         changeColorVertexSquare(gl, arrayOfShapes, selected_shape, rgb);
       } else if (selected_shape.shape == 2) {
         changeColorVertexRectangle(gl, arrayOfShapes, selected_shape, rgb);
+      } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
+        changeColorVertexPolygon(gl, arrayOfShapes, selected_shape, rgb);
       }
     }
   });
+
+  polygonSaveButton.addEventListener("click", (e) => {
+    finalizePolygon(gl, arrayOfShapes, selectedCreateShape, positionBuffer);
+    polygonPointsArray = [];
+    shape_index++;
+  })
 
   canvas.addEventListener("mousedown", function (event) {
     mouseDown = true;
@@ -205,7 +219,12 @@ function main() {
     let position = getPositionInCanvas(event);
 
     if (clickMode == 0) {
-      if (first) {
+      if (polygonMode) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+
+        addPolygonPoint(gl, position, polygonPointsArray, index, default_color, positionBuffer);
+        index++;
+      } else if (first) {
         first = false;
         v1 = [position.x, position.y]
 
@@ -256,7 +275,7 @@ function main() {
         selected_shape_center = getCenterOfShape(selected_shape);
         dilationSlider.disabled = false;
         dilationSliderLabel.innerText = "Shape Dilation";
-
+        
         let corner_position = positionInCornerShape(position, selected_shape);
         if (corner_position != null) {
           clicked_vertex = corner_position;
@@ -291,7 +310,9 @@ function main() {
     if (clickMode == 0) {
       canvas.style.cursor = "pointer";
 
-      if (!first) {
+      if (polygonMode) {
+        mouseMoveCreatePolygon(gl, index, position);
+      } else if (!first) {
         if (selectedCreateShape == 0) {
           let result = mouseMoveCreateLine(gl, position, v1, v2);
           v1 = result.v1;
@@ -314,9 +335,14 @@ function main() {
       if (selected_shape != null && mouseDown && positionInShape(mouseDownPosition, selected_shape)) {
         is_moving_shape = true;
         let corner_position = positionInCornerShape(mouseDownPosition, selected_shape);
-        let old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
-        let new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
-        let correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
+        
+        // Bypass buat polygon
+        let old_difference, new_difference, correction;
+        if (selected_shape_center !== null) {
+          old_difference = { x: selected_shape_center[0] - mouseDownPosition.x, y: selected_shape_center[1] - mouseDownPosition.y };
+          new_difference = { x: selected_shape_center[0] - position.x, y: selected_shape_center[1] - position.y };
+          correction = { x: old_difference.x - new_difference.x, y: old_difference.y - new_difference.y };
+        }
 
         if (corner_position != null) {
           if (selected_shape.shape == 0) {
@@ -335,6 +361,8 @@ function main() {
             v2 = result.v2;
             v3 = result.v3;
             v4 = result.v4;
+          } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
+            movePolygonVertex(gl, selected_shape, position, corner_position);
           }
         } else {
           if (selected_shape.shape == 0) {
@@ -353,6 +381,8 @@ function main() {
             v2 = result.v2;
             v3 = result.v3;
             v4 = result.v4;
+          } else if (selected_shape.shape == 3 || selected_shape.shape == 4) {
+            // TODO implement translasi
           }
         }
       }
@@ -380,25 +410,33 @@ function main() {
       if (shape.shape == 0) {
         gl.drawArrays(gl.LINES, i, 2);
         i += 2;
-
       } else if (shape.shape == 1) {
         gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
         i += 4;
-
       } else if (shape.shape == 2) {
         gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
         i += 4;
+      } else if (shape.shape == 3) {
+        gl.drawArrays(gl.TRIANGLE_STRIP, i, shape.nPolygon);
+        i += shape.nPolygon;
+      } else if (shape.shape == 4) {
+        gl.drawArrays(gl.TRIANGLE_FAN, i, shape.nPolygon);
+        i += shape.nPolygon;
       }
 
     }
 
-    if (clickMode == 0 && !first) {
+    if (clickMode == 0 && (!first || polygonMode)) {
       if (selectedCreateShape == 0) {
         gl.drawArrays(gl.LINES, i, 2);
       } else if (selectedCreateShape == 1) {
         gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
       } else if (selectedCreateShape == 2) {
         gl.drawArrays(gl.TRIANGLE_FAN, i, 4);
+      } else if (selectedCreateShape == 3) {
+        gl.drawArrays(gl.TRIANGLE_STRIP, i, polygonPointsArray.length+1);
+      } else if (selectedCreateShape == 4) {
+        gl.drawArrays(gl.TRIANGLE_FAN, i, polygonPointsArray.length+1);
       }
     }
 
