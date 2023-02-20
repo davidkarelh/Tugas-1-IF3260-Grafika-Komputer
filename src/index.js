@@ -440,6 +440,7 @@ function main() {
     let j = 0;
     for (let speed of rotationSpeeds) {
       if (speed != 0) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
         if (arrayOfShapes[j].shape == 0) {
           rotateLineAroundCenter(gl, arrayOfShapes[j], speed);
         } else if (arrayOfShapes[j].shape == 1) {
