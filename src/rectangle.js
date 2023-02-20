@@ -30,6 +30,7 @@ var secondClickCreateRectangle = (gl, position, v1, v2, v3, v4, arrayOfShapes) =
         },
         index
     });
+    rotationSpeeds.push(0);
 
     return { v1, v2, v3, v4 };
 }
@@ -143,4 +144,22 @@ var changeColorVertexRectangle = (gl, arrayOfShapes, selected_shape, rgb) => {
     selected_shape.colors[clicked_vertex] = rgb;
 
     arrayOfShapes[selected_shape.shape_index].colors[clicked_vertex] = rgb;
+}
+
+var rotateRectangleAroundCenter = (gl, selected_shape, angle) => {
+    var center = [(selected_shape.vertices.v1[0] + selected_shape.vertices.v2[0]) / 2, (selected_shape.vertices.v1[1] + selected_shape.vertices.v2[1]) / 2];
+    var v1 = rotatePointAroundCenter(selected_shape.vertices.v1, center, angle);
+    var v2 = rotatePointAroundCenter(selected_shape.vertices.v2, center, angle);
+    var v3 = rotatePointAroundCenter(selected_shape.vertices.v3, center, angle);
+    var v4 = rotatePointAroundCenter(selected_shape.vertices.v4, center, angle);
+
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * selected_shape.index, new Float32Array(v1));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (selected_shape.index + 1), new Float32Array(v3));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (selected_shape.index + 2), new Float32Array(v2));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (selected_shape.index + 3), new Float32Array(v4));
+
+    arrayOfShapes[selected_shape.shape_index].vertices.v1 = v1;
+    arrayOfShapes[selected_shape.shape_index].vertices.v2 = v2;
+    arrayOfShapes[selected_shape.shape_index].vertices.v3 = v3;
+    arrayOfShapes[selected_shape.shape_index].vertices.v4 = v4;
 }

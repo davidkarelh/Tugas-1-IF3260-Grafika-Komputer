@@ -162,19 +162,29 @@ function isInsidePolygon(cur_coord, vertices) {
     for (let key in vertices) {
         polygon.push(vertices[key]);
     }
-    
+
     const x = cur_coord.x, y = cur_coord.y;
     var inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
         var xi = polygon[i][0], yi = polygon[i][1];
         var xj = polygon[j][0], yj = polygon[j][1];
-        
+
         var intersect = ((yi > y) != (yj > y))
-        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
         if (intersect) inside = !inside;
     }
-    
+
     return inside;
+}
+
+function rotatePointAroundCenter(point, center, angle) {
+    var x = point[0] - center[0];
+    var y = point[1] - center[1];
+
+    var x1 = x * Math.cos(angle) - y * Math.sin(angle);
+    var y1 = x * Math.sin(angle) + y * Math.cos(angle);
+
+    return [x1 + center[0], y1 + center[1]];
 }
 
 function saveModel() {
@@ -219,19 +229,19 @@ function loadModel(gl, positionBuffer, colorBuffer) {
             if (shape.shape == 3 || shape.shape == 4) {
                 polygonPointsArray[shape_index] = shape;
             }
-            
+
             if (shape.shape == 1 || shape.shape == 2) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-                gl.bufferSubData(gl.ARRAY_BUFFER, 16*index, new Float32Array(shape.colors.v1));
-                gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index+1), new Float32Array(shape.colors.v3));
-                gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index+2), new Float32Array(shape.colors.v2));
-                gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index+3), new Float32Array(shape.colors.v4));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, new Float32Array(shape.colors.v1));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (index + 1), new Float32Array(shape.colors.v3));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (index + 2), new Float32Array(shape.colors.v2));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (index + 3), new Float32Array(shape.colors.v4));
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-                gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, new Float32Array(shape.vertices.v1));
-                gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+1), new Float32Array(shape.vertices.v3));
-                gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+2), new Float32Array(shape.vertices.v2));
-                gl.bufferSubData(gl.ARRAY_BUFFER, 8*(index+3), new Float32Array(shape.vertices.v4));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, new Float32Array(shape.vertices.v1));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (index + 1), new Float32Array(shape.vertices.v3));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (index + 2), new Float32Array(shape.vertices.v2));
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (index + 3), new Float32Array(shape.vertices.v4));
                 index += 4;
             } else {
                 for (let vertice in shape.colors) {
@@ -242,10 +252,10 @@ function loadModel(gl, positionBuffer, colorBuffer) {
                     index++;
                 }
             }
-            
+
             shape_index++;
         }
-        
+
         alert("Model loaded successfully!");
         document.getElementById('model-file-load').value = "";
     }

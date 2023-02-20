@@ -11,6 +11,10 @@ let selectShapeRadio = document.getElementById("selectShapeRadio");
 let dilationSliderContainer = document.getElementById("dilation-slider-container");
 let dilationSlider = document.getElementById("dilation-slider");
 let dilationSliderLabel = document.querySelector("label[for='dilation-slider']");
+let rotationSpeedSliderContainer = document.getElementById("rotation-speed-container");
+let rotationSpeedSlider = document.getElementById("rotation-speed-slider");
+let rotationSpeedSliderLabel = document.querySelector("label[for='rotation-speed-slider']");
+let stopSpinButton = document.getElementById("stop-spin");
 let colorPickerContainer = document.getElementById("colorPicker-container");
 let colorPicker = document.getElementById("colorPicker");
 let colorPickerLabel = document.querySelector("label[for='colorPicker']");
@@ -26,6 +30,7 @@ var shape_enum = {
 };
 
 var arrayOfShapes = [];
+var rotationSpeeds = [];
 var shape_index = 0;
 var mouseDown = false;
 var mouseDownPosition = null;
@@ -138,7 +143,7 @@ function main() {
     polygonMode = selectedCreateShape == 3 || selectedCreateShape == 4;
   });
 
-  dilationSlider.addEventListener("change", (e) => {
+  dilationSlider.addEventListener("input", (e) => {
     if (selected_shape != null) {
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       let dilateValue = (dilationSlider.value / oldDilationSliderValue);
@@ -155,14 +160,28 @@ function main() {
     oldDilationSliderValue = dilationSlider.value;
   })
 
+  rotationSpeedSlider.addEventListener("input", (e) => {
+    if (selected_shape != null) {
+      let rotateValue = rotationSpeedSlider.value * 0.2;
+      rotationSpeeds[selected_shape.shape_index] = rotateValue;
+    }
+  })
+
+  stopSpinButton.addEventListener("click", (e) => {
+    rotationSpeeds[selected_shape.shape_index] = 0;
+    rotationSpeedSlider.value = 0;
+  })
+
   createShapeRadio.addEventListener("click", (e) => {
     clickMode = 0;
     selected_shape = null;
     selected_shape_center = null;
     dilationSliderContainer.hidden = true;
+    rotationSpeedSliderContainer.hidden = true;
     // dilationSlider.disabled = true;
     // dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
     dilationSlider.value = 1;
+    rotationSpeedSlider.value = 0;
     oldDilationSliderValue = 1;
     let rgb = default_color.map((element) => Math.round(element * 255));
     colorPicker.value = rgbToHex(rgb);
@@ -289,7 +308,9 @@ function main() {
         selected_shape = shape;
         selected_shape_center = getCenterOfShape(selected_shape);
         dilationSliderContainer.hidden = false;
-        
+        rotationSpeedSliderContainer.hidden = false;
+        rotationSpeedSlider.value = rotationSpeeds[shape.shape_index] / 0.2;
+
         let corner_position = positionInCornerShape(position, selected_shape);
         if (corner_position != null) {
           clicked_vertex = corner_position;
@@ -306,7 +327,9 @@ function main() {
         selected_shape = null;
         selected_shape_center = null;
         dilationSliderContainer.hidden = true;
+        rotationSpeedSliderContainer.hidden = true;
         dilationSlider.value = 1;
+        rotationSpeedSlider.value = 0;
         oldDilationSliderValue = 1;
         clicked_vertex = null;
         colorPickerContainer.hidden = true;
@@ -345,7 +368,7 @@ function main() {
       if (selected_shape != null && mouseDown && positionInShape(mouseDownPosition, selected_shape)) {
         is_moving_shape = true;
         let corner_position = positionInCornerShape(mouseDownPosition, selected_shape);
-        
+
         // Bypass buat polygon
         let old_difference, new_difference, correction;
         if (selected_shape_center !== null) {
@@ -414,6 +437,21 @@ function main() {
     // for(var i = 0; i < drawLimit; i+=2) {
     //   gl.drawArrays( gl.LINES, i, 2 );
     // }
+    let j = 0;
+    for (let speed of rotationSpeeds) {
+      if (speed != 0) {
+        if (arrayOfShapes[j].shape == 0) {
+          rotateLineAroundCenter(gl, arrayOfShapes[j], speed);
+        } else if (arrayOfShapes[j].shape == 1) {
+          rotateSquareAroundCenter(gl, arrayOfShapes[j], speed);
+        } else if (arrayOfShapes[j].shape == 2) {
+          rotateRectangleAroundCenter(gl, arrayOfShapes[j], speed);
+        } else if (arrayOfShapes[j].shape == 3 || arrayOfShapes[j].shape == 4) {
+          rotatePolygonAroundCenter(gl, arrayOfShapes[j], speed);
+        }
+      }
+      j += 1;
+    }
 
     let i = 0;
     for (let shape of arrayOfShapes) {
