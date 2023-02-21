@@ -17,6 +17,30 @@ var addPolygonPoint = (gl, position, index, default_color, positionBuffer) => {
   polygonPointsArray[shape_index].push([position.x, position.y]);
 }
 
+var deletePolygonPoint = (gl, positionBuffer, colorBuffer) => {
+  const idx = selected_shape.shape_index;
+  const verLength = polygonPointsArray[idx].length;
+  
+  if (verLength == 3) {
+    alert("Tidak bisa menghapus titik karena hanya tersisa 3 titik");
+    return;
+  }
+  for (let i = shape_index + 1; i < arrayOfShapes.length; i++) {
+    arrayOfShapes[i].index -= 1;
+  }
+  
+  delete arrayOfShapes[idx].vertices[clicked_vertex];
+  delete arrayOfShapes[idx].colors[clicked_vertex];
+  arrayOfShapes[idx].vertices = repack(arrayOfShapes[idx].vertices);
+  arrayOfShapes[idx].colors = repack(arrayOfShapes[idx].colors);
+  
+  arrayOfShapes[idx].nPolygon--;
+  index--;
+  polygonPointsArray[idx].splice(clicked_vertex, 1);
+  
+  refreshCanvas(gl, positionBuffer, colorBuffer);
+}
+
 var finalizePolygon = (gl, shape, positionBuffer) => {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   const polArr = polygonPointsArray[shape_index];

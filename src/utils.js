@@ -229,6 +229,7 @@ function loadModel(gl, positionBuffer, colorBuffer) {
             if (shape.shape == 3 || shape.shape == 4) {
                 polygonPointsArray[shape_index] = shape;
             }
+            rotationSpeeds[shape_index] = 0;
 
             if (shape.shape == 1 || shape.shape == 2) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
@@ -260,4 +261,44 @@ function loadModel(gl, positionBuffer, colorBuffer) {
         document.getElementById('model-file-load').value = "";
     }
     reader.readAsText(file);
+}
+
+function repack(dict) {
+    let ans = {};
+    let i = 0;
+    for (key in dict) {
+        ans[i] = dict[key];
+        i++;
+    }
+    return ans
+}
+
+function refreshCanvas(gl, positionBuffer, colorBuffer) {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    let i = 0;    
+    for (let shape of arrayOfShapes) {
+        if (shape.shape == 1 || shape.shape == 2) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 16 * i, new Float32Array(shape.colors.v1));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (i + 1), new Float32Array(shape.colors.v3));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (i + 2), new Float32Array(shape.colors.v2));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (i + 3), new Float32Array(shape.colors.v4));
+    
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8 * i, new Float32Array(shape.vertices.v1));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (i + 1), new Float32Array(shape.vertices.v3));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (i + 2), new Float32Array(shape.vertices.v2));
+            gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (i + 3), new Float32Array(shape.vertices.v4));
+            i += 4;
+        } else {
+            for (let vertice in shape.colors) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16 * i, new Float32Array(shape.colors[vertice]));
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8 * i, new Float32Array(shape.vertices[vertice]));
+                i++;
+            }
+        }
+    }
 }

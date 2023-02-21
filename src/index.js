@@ -15,7 +15,8 @@ let rotationSpeedSliderContainer = document.getElementById("rotation-speed-conta
 let rotationSpeedSlider = document.getElementById("rotation-speed-slider");
 let rotationSpeedSliderLabel = document.querySelector("label[for='rotation-speed-slider']");
 let stopSpinButton = document.getElementById("stop-spin");
-let colorPickerContainer = document.getElementById("colorPicker-container");
+let editVertexContainer = document.getElementById("editVertex-container");
+let deleteVertexButton = document.getElementById("delete-vertex");
 let colorPicker = document.getElementById("colorPicker");
 let colorPickerLabel = document.querySelector("label[for='colorPicker']");
 let shapeCreateSelector = document.getElementById("shape-selector");
@@ -164,12 +165,19 @@ function main() {
     if (selected_shape != null) {
       let rotateValue = rotationSpeedSlider.value * 0.2;
       rotationSpeeds[selected_shape.shape_index] = rotateValue;
+      const showStopSpinButton = rotationSpeeds[shape.shape_index] == 0;
+      stopSpinButton.hidden = showStopSpinButton;
     }
   })
 
   stopSpinButton.addEventListener("click", (e) => {
     rotationSpeeds[selected_shape.shape_index] = 0;
     rotationSpeedSlider.value = 0;
+    stopSpinButton.hidden = true;
+  })
+
+  deleteVertexButton.addEventListener("click", (e) => {
+    deletePolygonPoint(gl, positionBuffer, colorBuffer);
   })
 
   createShapeRadio.addEventListener("click", (e) => {
@@ -178,8 +186,7 @@ function main() {
     selected_shape_center = null;
     dilationSliderContainer.hidden = true;
     rotationSpeedSliderContainer.hidden = true;
-    // dilationSlider.disabled = true;
-    // dilationSliderLabel.innerText = "Shape Dilation (disabled, click a shape to use)";
+    editVertexContainer.hidden = true;
     dilationSlider.value = 1;
     rotationSpeedSlider.value = 0;
     oldDilationSliderValue = 1;
@@ -309,18 +316,23 @@ function main() {
         selected_shape_center = getCenterOfShape(selected_shape);
         dilationSliderContainer.hidden = false;
         rotationSpeedSliderContainer.hidden = false;
+        const showStopSpinButton = rotationSpeeds[shape.shape_index] == 0;
+        stopSpinButton.hidden = showStopSpinButton;
         rotationSpeedSlider.value = rotationSpeeds[shape.shape_index] / 0.2;
 
         let corner_position = positionInCornerShape(position, selected_shape);
         if (corner_position != null) {
           clicked_vertex = corner_position;
-          colorPickerContainer.hidden = false;
+          editVertexContainer.hidden = false;
+          if (selected_shape.shape == 3 || selected_shape.shape == 4) {
+            deleteVertexButton.hidden = false;
+          }
           let color = arrayOfShapes[selected_shape.shape_index].colors[corner_position];
           let rgb = color.map((element) => Math.round(element * 255));
           colorPicker.value = rgbToHex(rgb);
         } else {
           clicked_vertex = null;
-          colorPickerContainer.hidden = true;
+          editVertexContainer.hidden = true;
         }
 
       } else {
@@ -332,7 +344,7 @@ function main() {
         rotationSpeedSlider.value = 0;
         oldDilationSliderValue = 1;
         clicked_vertex = null;
-        colorPickerContainer.hidden = true;
+        editVertexContainer.hidden = true;
       }
     }
   });
