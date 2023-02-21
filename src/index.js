@@ -3,6 +3,7 @@
 
 var gl;
 var index = 0;
+var indexHull = 0;
 
 var canvas = document.querySelector("canvas");
 
@@ -138,10 +139,13 @@ function main() {
   gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 
   shapeCreateSelector.addEventListener("change", (e) => {
+    if (selectedCreateShape == 3) {
+      index -= polygonPointsArray[shape_index] ? polygonPointsArray[shape_index].length : 0;
+    }
     selectedCreateShape = parseInt(shapeCreateSelector.value);
-    index -= polygonPointsArray[shape_index] ? polygonPointsArray[shape_index].length : 0;
     delete polygonPointsArray[shape_index];
     polygonMode = selectedCreateShape == 3 || selectedCreateShape == 4;
+    document.getElementById("polygon-save").hidden = true;
   });
 
   dilationSlider.addEventListener("input", (e) => {
@@ -177,7 +181,7 @@ function main() {
   })
 
   deleteVertexButton.addEventListener("click", (e) => {
-    deletePolygonPoint(gl, positionBuffer, colorBuffer);
+    deletePolygonVertex(gl, positionBuffer, colorBuffer);
   })
 
   createShapeRadio.addEventListener("click", (e) => {
@@ -192,6 +196,7 @@ function main() {
     oldDilationSliderValue = 1;
     let rgb = default_color.map((element) => Math.round(element * 255));
     colorPicker.value = rgbToHex(rgb);
+    document.getElementById("polygon-save").hidden = true;
   });
 
   selectShapeRadio.addEventListener("click", (e) => {
@@ -216,8 +221,13 @@ function main() {
   });
 
   polygonSaveButton.addEventListener("click", (e) => {
-    finalizePolygon(gl, selectedCreateShape, positionBuffer);
+    if (shapeCreateSelector.value == 3) {
+      finalizePolygon(gl, selectedCreateShape, positionBuffer);
+    } else {
+      finalizePolygonHull(selectedCreateShape);
+    }
     shape_index++;
+    document.getElementById("polygon-save").hidden = true;
   })
 
   saveModelButton.addEventListener("click", (e) => {
@@ -261,11 +271,15 @@ function main() {
     let position = getPositionInCanvas(event);
 
     if (clickMode == 0) {
-      if (polygonMode) {
+      if (selectedCreateShape == 3) {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 
         addPolygonPoint(gl, position, index, default_color, positionBuffer);
         index++;
+      } else if (selectedCreateShape == 4) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+
+        addPolygonHullPoint(gl, position, index, default_color, positionBuffer);
       } else if (first) {
         first = false;
         v1 = [position.x, position.y]
@@ -324,9 +338,7 @@ function main() {
         if (corner_position != null) {
           clicked_vertex = corner_position;
           editVertexContainer.hidden = false;
-          if (selected_shape.shape == 3 || selected_shape.shape == 4) {
-            deleteVertexButton.hidden = false;
-          }
+          deleteVertexButton.hidden = !(selected_shape.shape == 3 || selected_shape.shape == 4);
           let color = arrayOfShapes[selected_shape.shape_index].colors[corner_position];
           let rgb = color.map((element) => Math.round(element * 255));
           colorPicker.value = rgbToHex(rgb);
@@ -355,7 +367,7 @@ function main() {
     if (clickMode == 0) {
       canvas.style.cursor = "pointer";
 
-      if (polygonMode) {
+      if (selectedCreateShape == 3) {
         mouseMoveCreatePolygon(gl, index, position);
       } else if (!first) {
         if (selectedCreateShape == 0) {
@@ -498,7 +510,7 @@ function main() {
       } else if (selectedCreateShape == 3) {
         gl.drawArrays(gl.TRIANGLE_STRIP, i, polygonLength + 1);
       } else if (selectedCreateShape == 4) {
-        gl.drawArrays(gl.TRIANGLE_FAN, i, polygonLength + 1);
+        gl.drawArrays(gl.TRIANGLE_FAN, i, polygonLength);
       }
     }
 

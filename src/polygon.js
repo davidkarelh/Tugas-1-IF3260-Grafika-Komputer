@@ -17,7 +17,30 @@ var addPolygonPoint = (gl, position, index, default_color, positionBuffer) => {
   polygonPointsArray[shape_index].push([position.x, position.y]);
 }
 
-var deletePolygonPoint = (gl, positionBuffer, colorBuffer) => {
+var addPolygonHullPoint = (gl, position, index, default_color, positionBuffer) => {
+  if (!polygonPointsArray[shape_index]) {
+    document.getElementById("polygon-save").hidden = false;
+    polygonPointsArray[shape_index] = [];
+  }
+
+  polygonPointsArray[shape_index].push([position.x, position.y]);
+  indexHull++
+  if (polygonPointsArray[shape_index].length >= 4) {
+    polygonPointsArray[shape_index] = getPolygonHull(polygonPointsArray[shape_index]);
+    indexHull = polygonPointsArray[shape_index].length;
+  }
+
+  for (let i = 0; i < indexHull; i++) {
+    gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (index + i), new Float32Array(default_color));
+  }
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  for (let i = 0; i < indexHull; i++) {
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8 * (index + i), new Float32Array(polygonPointsArray[shape_index][i]));
+  }
+}
+
+var deletePolygonVertex = (gl, positionBuffer, colorBuffer) => {
   const idx = selected_shape.shape_index;
   const verLength = polygonPointsArray[idx].length;
   
@@ -25,7 +48,7 @@ var deletePolygonPoint = (gl, positionBuffer, colorBuffer) => {
     alert("Tidak bisa menghapus titik karena hanya tersisa 3 titik");
     return;
   }
-  for (let i = shape_index + 1; i < arrayOfShapes.length; i++) {
+  for (let i = idx + 1; i < arrayOfShapes.length; i++) {
     arrayOfShapes[i].index -= 1;
   }
   
@@ -39,6 +62,7 @@ var deletePolygonPoint = (gl, positionBuffer, colorBuffer) => {
   polygonPointsArray[idx].splice(clicked_vertex, 1);
   
   refreshCanvas(gl, positionBuffer, colorBuffer);
+  console.log(arrayOfShapes);
 }
 
 var finalizePolygon = (gl, shape, positionBuffer) => {
@@ -63,8 +87,25 @@ var finalizePolygon = (gl, shape, positionBuffer) => {
     nPolygon
   });
   rotationSpeeds.push(0);
+}
 
-  document.getElementById("polygon-save").hidden = true;
+var finalizePolygonHull = (shape) => {
+  const polArr = polygonPointsArray[shape_index];
+  const vertices = Object.assign({}, ...polArr.map((_, i) => ({ [i]: polArr[i] })));
+  const colors = Object.assign({}, ...polArr.map((_, i) => ({ [i]: default_color })));
+  const nPolygon = polArr.length;
+  
+  indexHull = 0;
+  arrayOfShapes.push({
+    shape,
+    shape_index,
+    vertices,
+    colors,
+    index,
+    nPolygon
+  });
+  index += nPolygon;
+  rotationSpeeds.push(0);
 }
 
 var changeColorVertexPolygon = (gl, selected_shape, rgb) => {
@@ -128,4 +169,32 @@ var rotatePolygonAroundCenter = (gl, selected_shape, angle) => {
     polygonPointsArray[selected_shape.shape_index][i] = newPoint;
     arrayOfShapes[selected_shape.shape_index].vertices[i] = newPoint;
   }
+}
+
+var getPolygonHull = (cur_position) => {
+  let hull = [];
+  const n = cur_position.length;
+
+  let l = 0;
+  for (let i = 1; i < n; i++) {
+    if (cur_position[i][0] < cur_position[l][0]) {
+      l = i;
+    }
+  }
+
+  let p = l, q;
+  do {
+    hull.push(cur_position[p]);
+    q = (p + 1) % n;
+
+    for (let i = 0; i < n; i++) {
+      if (getOrientation(cur_position[p], cur_position[i], cur_position[q]) == 2) {
+        q = i;
+      }
+    }
+
+    p = q;
+  } while (p != l);
+
+  return hull;
 }

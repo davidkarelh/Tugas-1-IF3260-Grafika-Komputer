@@ -227,7 +227,11 @@ function loadModel(gl, positionBuffer, colorBuffer) {
             })
 
             if (shape.shape == 3 || shape.shape == 4) {
-                polygonPointsArray[shape_index] = shape;
+                let temp = [];
+                for (let vertice in shape.vertices) {
+                    temp.push(shape.vertices[vertice]);
+                }
+                polygonPointsArray[shape_index] = temp;
             }
             rotationSpeeds[shape_index] = 0;
 
@@ -301,4 +305,10 @@ function refreshCanvas(gl, positionBuffer, colorBuffer) {
             }
         }
     }
+}
+
+function getOrientation(p1, p2, p3) {
+    let val = (p2[1] - p1[1]) * (p3[0] - p2[0]) - (p2[0] - p1[0]) * (p3[1] - p2[1]);
+    if (val == 0) return 0;
+    return (val > 0) ? 1 : 2;
 }
